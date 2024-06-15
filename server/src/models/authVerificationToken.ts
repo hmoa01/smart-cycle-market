@@ -8,7 +8,7 @@ interface AuthVerificationTokenDocument extends Document {
 }
 
 interface Methods {
-  comparePassword(token: string): Promise<boolean>;
+  compareToken(token: string): Promise<boolean>;
 }
 
 const schema = new Schema<AuthVerificationTokenDocument, {}, Methods>({
@@ -36,7 +36,7 @@ schema.pre("save", async function (next) {
   next();
 });
 
-schema.methods.comparePassword = async function (token) {
+schema.methods.compareToken = async function (token) {
   return await compare(token, this.token);
 };
 
