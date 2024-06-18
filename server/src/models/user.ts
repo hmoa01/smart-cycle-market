@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, Model, model } from "mongoose";
 import { hash, genSalt, compare } from "bcrypt";
 
 interface UserDocument extends Document {
@@ -7,6 +7,9 @@ interface UserDocument extends Document {
   password: string;
   verified: boolean;
   tokens: string[];
+}
+
+interface Methods {
   comparePassword(password: string): Promise<boolean>;
 }
 
@@ -46,5 +49,5 @@ userSchema.methods.comparePassword = async function (password: string) {
   return await compare(password, this.password);
 };
 
-const UserModel = model<UserDocument>("User", userSchema);
+const UserModel = model("User", userSchema) as Model<UserDocument, {}, Methods>;
 export default UserModel;

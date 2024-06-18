@@ -6,6 +6,7 @@ import AuthVerificationTokenModel from "src/models/authVerificationToken";
 import { sendErrorRes } from "src/utils/helper";
 import jwt from "jsonwebtoken";
 import mail from "src/utils/mail";
+import PasswordResetTokenModel from "src/models/passwordResetToken";
 
 export const createNewUser: RequestHandler = async (req, res) => {
   const { email, password, name } = req.body;
@@ -171,4 +172,26 @@ export const signOut: RequestHandler = async (req, res) => {
   await user.save();
 
   res.send({ message: "Successfully signed out!" });
+};
+
+export const generateForgetPassLink: RequestHandler = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await UserModel.findOne({ email });
+  if (!user) return sendErrorRes(res, "Email not found!", 404);
+
+  await PasswordResetTokenModel.findOneAndDelete({ owner: user._id });
+
+  const token = crypto.randomBytes(36).toString("hex");
+  await PasswordResetTokenModel.create({ owner: user._id, token });
+
+  const link = `${process.env.FORGET_PASSWORD_LINK}?id=${user._id}&token=${token}`;
+
+  await mail.sendPasswordResetLink(user.email, link);
+
+  res.json({ message: "PLease check your inbox." });
+};
+
+export const grantValid: RequestHandler = async (req, res) => {
+  res.json({ valid: true });
 };
