@@ -56,7 +56,7 @@ export const isAuth: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const isValidPAsswordResetToken: RequestHandler = async (
+export const isValidPasswordResetToken: RequestHandler = async (
   req,
   res,
   next

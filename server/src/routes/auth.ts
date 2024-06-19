@@ -8,11 +8,17 @@ import {
   sendProfile,
   signIn,
   signOut,
+  updatePassword,
+  updateProfile,
   verifyEmail,
 } from "controllers/auth";
 import validate from "src/middleware/validator";
-import { newUserSchema, verifyTokenSchema } from "src/utils/validationSchema";
-import { isAuth, isValidPAsswordResetToken } from "src/middleware/auth";
+import {
+  newUserSchema,
+  resetPasswordSchema,
+  verifyTokenSchema,
+} from "src/utils/validationSchema";
+import { isAuth, isValidPasswordResetToken } from "src/middleware/auth";
 
 const authRouter = Router();
 
@@ -27,8 +33,15 @@ authRouter.post("/forget-password", generateForgetPassLink);
 authRouter.post(
   "/verify-password-reset-token",
   validate(verifyTokenSchema),
-  isValidPAsswordResetToken,
+  isValidPasswordResetToken,
   grantValid
 );
+authRouter.post(
+  "/reset-password",
+  validate(resetPasswordSchema),
+  isValidPasswordResetToken,
+  updatePassword
+);
+authRouter.patch("/update-profile", isAuth, updateProfile);
 
 export default authRouter;

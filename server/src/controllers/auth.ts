@@ -195,3 +195,44 @@ export const generateForgetPassLink: RequestHandler = async (req, res) => {
 export const grantValid: RequestHandler = async (req, res) => {
   res.json({ valid: true });
 };
+
+export const updatePassword: RequestHandler = async (req, res) => {
+  const { id, password } = req.body;
+
+  const user = await UserModel.findById(id);
+  if (!user) return sendErrorRes(res, "Unauthorized access!", 403);
+
+  const matched = await user.comparePassword(password);
+  if (matched)
+    return sendErrorRes(res, "The new password must be different!", 422);
+
+  user.password = password;
+  await user.save();
+
+  await PasswordResetTokenModel.findOneAndDelete({ owner: user._id });
+
+  await mail.sendPasswordUpdateMessage(user.email);
+
+  res.json({ message: "Password updated successfully!" });
+};
+
+export const updateProfile: RequestHandler = async (req, res) => {
+  const { name } = req.body;
+
+  if (typeof name !== "string" || name.trim().length < 3) {
+    return sendErrorRes(
+      res,
+      "Name must be a string of 3 or more characters!",
+      422
+    );
+  }
+
+  await UserModel.findByIdAndUpdate(req.user.id, { name });
+
+  res.json({
+    profile: {
+      ...req.user,
+      name,
+    },
+  });
+};
