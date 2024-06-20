@@ -7,6 +7,13 @@ import { sendErrorRes } from "src/utils/helper";
 import jwt from "jsonwebtoken";
 import mail from "src/utils/mail";
 import PasswordResetTokenModel from "src/models/passwordResetToken";
+import ImageKit from "imagekit";
+
+const imagekit = new ImageKit({
+  publicKey: process.env.CLOUD_PUBLIC_KEY!,
+  privateKey: process.env.CLOUD_PRIVATE_KEY!,
+  urlEndpoint: process.env.CLOUD_URL!,
+});
 
 export const createNewUser: RequestHandler = async (req, res) => {
   const { email, password, name } = req.body;
@@ -235,4 +242,56 @@ export const updateProfile: RequestHandler = async (req, res) => {
       name,
     },
   });
+};
+
+export const updateAvatar: RequestHandler = async (req, res) => {
+  console.log(req);
+  if (!req.files || !req.files.avatar) {
+    return sendErrorRes(res, "No file uploaded!", 400);
+  }
+
+  const avatar = req.files.avatar;
+
+  if (Array.isArray(avatar)) {
+    return sendErrorRes(res, "Multiple files are not allowed!", 422);
+  }
+
+  if (!avatar.mimetype?.startsWith("image")) {
+    return sendErrorRes(res, "Invalid image file!", 422);
+  }
+
+  try {
+    const user = await UserModel.findById(req.user.id);
+    if (!user) {
+      return sendErrorRes(res, "User not found!", 404);
+    }
+
+    if (user.avatar?.id) {
+      await imagekit.deleteFile(user.avatar.id);
+    }
+
+    const image = await imagekit.upload({
+      fileName: avatar.originalFilename!,
+      file: avatar.filepath,
+      folder: "avatars",
+    });
+
+    console.log(image);
+
+    user.avatar = {
+      id: image.fileId,
+      url: image.url,
+    };
+    await user.save();
+
+    res.json({
+      profile: {
+        ...req.user,
+        avatar: user.avatar,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    sendErrorRes(res, "Internal server error", 500);
+  }
 };
