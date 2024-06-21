@@ -7,15 +7,9 @@ import { sendErrorRes } from "src/utils/helper";
 import jwt from "jsonwebtoken";
 import mail from "src/utils/mail";
 import PasswordResetTokenModel from "src/models/passwordResetToken";
-import ImageKit from "imagekit";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
-
-const imagekit = new ImageKit({
-  publicKey: process.env.CLOUD_PUBLIC_KEY!,
-  privateKey: process.env.CLOUD_PRIVATE_KEY!,
-  urlEndpoint: process.env.CLOUD_URL!,
-});
+import imagekit from "src/cloud";
 
 export const createNewUser: RequestHandler = async (req, res) => {
   const { email, password, name } = req.body;
