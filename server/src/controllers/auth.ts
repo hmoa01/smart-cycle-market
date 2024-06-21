@@ -8,6 +8,8 @@ import jwt from "jsonwebtoken";
 import mail from "src/utils/mail";
 import PasswordResetTokenModel from "src/models/passwordResetToken";
 import ImageKit from "imagekit";
+import fs from "fs";
+import { isValidObjectId } from "mongoose";
 
 const imagekit = new ImageKit({
   publicKey: process.env.CLOUD_PUBLIC_KEY!,
@@ -269,18 +271,30 @@ export const updateAvatar: RequestHandler = async (req, res) => {
     if (user.avatar?.id) {
       await imagekit.deleteFile(user.avatar.id);
     }
+    const fileContent = fs.readFileSync(avatar.filepath);
 
     const image = await imagekit.upload({
       fileName: avatar.originalFilename!,
-      file: avatar.filepath,
+      file: fileContent,
       folder: "avatars",
+    });
+
+    const resizedImageUrl = imagekit.url({
+      src: image.url,
+      transformation: [
+        {
+          width: 300,
+          height: 300,
+          crop: "maintain_ratio",
+        },
+      ],
     });
 
     console.log(image);
 
     user.avatar = {
       id: image.fileId,
-      url: image.url,
+      url: resizedImageUrl,
     };
     await user.save();
 
@@ -294,4 +308,22 @@ export const updateAvatar: RequestHandler = async (req, res) => {
     console.error(error);
     sendErrorRes(res, "Internal server error", 500);
   }
+};
+
+export const sendPublicProfile: RequestHandler = async (req, res) => {
+  const { id } = req.params;
+  if (!isValidObjectId(id)) {
+    return sendErrorRes(res, "Invalid profile id!", 422);
+  }
+
+  const user = await UserModel.findById(id);
+  if (!user) return sendErrorRes(res, "Profile not found!", 404);
+
+  res.json({
+    profile: {
+      id: user._id,
+      name: user.name,
+      avatar: user.avatar?.url,
+    },
+  });
 };
