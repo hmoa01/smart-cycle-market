@@ -1,7 +1,8 @@
 import { Schema, Model, model } from "mongoose";
 import { hash, genSalt, compare } from "bcrypt";
 
-interface UserDocument extends Document {
+export interface UserDocument extends Document {
+  _id: Schema.Types.ObjectId;
   name: string;
   email: string;
   password: string;
@@ -44,7 +45,7 @@ const userSchema = new Schema<UserDocument>(
 );
 
 userSchema.pre("save", async function (next) {
-  if ((this, this.isModified)) {
+  if (this.isModified("password")) {
     const salt = await genSalt(10);
     this.password = await hash(this.password, salt);
   }

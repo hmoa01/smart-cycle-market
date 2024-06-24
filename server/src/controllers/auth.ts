@@ -10,6 +10,7 @@ import PasswordResetTokenModel from "src/models/passwordResetToken";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
 import imagekit from "src/cloud";
+import { compare } from "bcrypt";
 
 export const createNewUser: RequestHandler = async (req, res) => {
   const { email, password, name } = req.body;
@@ -83,7 +84,7 @@ export const signIn: RequestHandler = async (req, res) => {
   const payload = { id: user._id };
 
   const accessToken = jwt.sign(payload, process.env.JWT_SECRET ?? "", {
-    expiresIn: "15min",
+    expiresIn: "15m",
   });
 
   const refreshToken = jwt.sign(payload, process.env.JWT_SECRET ?? "");

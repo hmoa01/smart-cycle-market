@@ -1,5 +1,12 @@
 import { Router } from "express";
-import { listNewProduct, updateProduct } from "src/controllers/product";
+import {
+  deleteProduct,
+  deleteProductImage,
+  listNewProduct,
+  updateProduct,
+  getProductDetail,
+  getProductByCategory,
+} from "src/controllers/product";
 import { isAuth } from "src/middleware/auth";
 import fileParser from "src/middleware/fileParser";
 import validate from "src/middleware/validator";
@@ -22,5 +29,10 @@ productRouter.patch(
   validate(newProductSchema),
   updateProduct
 );
+
+productRouter.delete("/:id", isAuth, fileParser, deleteProduct);
+productRouter.delete("/image/:productId/:imageId", isAuth, deleteProductImage);
+productRouter.get("/:id", isAuth, getProductDetail);
+productRouter.get("/by-category/:category", isAuth, getProductByCategory);
 
 export default productRouter;
