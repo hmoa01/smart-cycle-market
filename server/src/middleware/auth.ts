@@ -12,6 +12,7 @@ interface UserProfile {
   name: string;
   email: string;
   verified: boolean;
+  avatar?: string;
 }
 
 declare global {
@@ -36,7 +37,7 @@ export const isAuth: RequestHandler = async (req, res, next) => {
     if (!user) return sendErrorRes(res, "unauthorized request!", 403);
 
     req.user = {
-      id: user._id,
+      id: user._id.toString(),
       name: user.name,
       email: user.email,
       verified: user.verified,

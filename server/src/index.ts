@@ -13,6 +13,12 @@ app.use(express.static("src/public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.use((req, res, next) => {
+  console.log("došao");
+  console.log(req);
+  next();
+});
+
 //API ROUTES
 app.use("/auth", authRouter);
 app.use("/product", productRouter);

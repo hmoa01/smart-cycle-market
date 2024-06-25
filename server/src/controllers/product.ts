@@ -168,6 +168,7 @@ export const updateProduct: RequestHandler = async (req, res) => {
 };
 
 export const deleteProduct: RequestHandler = async (req, res) => {
+  console.log(req.user);
   const productId = req.params.id;
   if (!isValidObjectId(productId)) {
     return sendErrorRes(res, "Invalid product id", 422);
@@ -224,6 +225,7 @@ export const deleteProductImage: RequestHandler = async (req, res) => {
 };
 
 export const getProductDetail: RequestHandler = async (req, res) => {
+  console.log(req.user);
   const { id } = req.params;
   if (!isValidObjectId(id)) {
     return sendErrorRes(res, "Invalid product id", 422);
@@ -257,13 +259,20 @@ export const getProductDetail: RequestHandler = async (req, res) => {
 
 export const getProductByCategory: RequestHandler = async (req, res) => {
   const { category } = req.params;
+  const { pageNumber = "1", limit = "10" } = req.query as {
+    pageNumber: string;
+    limit: string;
+  };
   if (!categories.includes(category)) {
     return sendErrorRes(res, "Invalid category", 422);
   }
 
   const products = await ProductModel.find({
     category: category,
-  });
+  })
+    .sort("-createdAt")
+    .skip((+pageNumber - 1) * +limit)
+    .limit(+limit);
 
   const listing = products.map((p) => {
     return {
@@ -277,4 +286,52 @@ export const getProductByCategory: RequestHandler = async (req, res) => {
   res.json({
     products: listing,
   });
+};
+
+export const getLatestProducts: RequestHandler = async (req, res) => {
+  const products = await ProductModel.find().sort("-createdAt").limit(10);
+
+  const listing = products.map((p) => {
+    return {
+      id: p._id,
+      name: p.name,
+      thumbnail: p.thumbnail,
+      category: p.category,
+      price: p.price,
+    };
+  });
+  res.json({
+    products: listing,
+  });
+};
+
+export const getListings: RequestHandler = async (req, res) => {
+  const { pageNumber = "1", limit = "10" } = req.query as {
+    pageNumber: string;
+    limit: string;
+  };
+  const products = await ProductModel.find({ owner: req.user.id })
+    .sort("-createdAt")
+    .skip((+pageNumber - 1) * +limit)
+    .limit(+limit);
+
+  const listings = products.map((p) => {
+    return {
+      id: p._id,
+      name: p.name,
+      thumbnail: p.thumbnail,
+      category: p.category,
+      price: p.price,
+      image: p.images?.map((i) => i.url),
+      date: p.purchasingDate,
+      description: p.description,
+      seller: {
+        id: req.user.id,
+        name: req.user.name,
+        avatar: req.user.avatar,
+      },
+    };
+  });
+
+  res.json({ products: listings });
 };
