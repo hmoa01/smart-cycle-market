@@ -10,7 +10,6 @@ import PasswordResetTokenModel from "src/models/passwordResetToken";
 import fs from "fs";
 import { isValidObjectId } from "mongoose";
 import imagekit from "src/cloud";
-import { compare } from "bcrypt";
 
 export const createNewUser: RequestHandler = async (req, res) => {
   const { email, password, name } = req.body;
