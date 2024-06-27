@@ -5,10 +5,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@views/*": ["app/views/*"],
+      "@views/*": ["app/(auth)/*"],
       "@components/*": ["app/components/*"],
       "@utils/*": ["app/utils/*"],
-      "@assets/*": ["app/assets/*"]
+      "@assets/*": ["app/assets/*"],
+      "@ui/*": ["app/ui/*"]
     },
     "forceConsistentCasingInFileNames": true
   },

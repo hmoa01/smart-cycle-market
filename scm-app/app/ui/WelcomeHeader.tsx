@@ -1,17 +1,10 @@
+import colors from "@utils/colors";
 import { FC } from "react";
-import {
-  Image,
-  Platform,
-  StatusBar,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import colors from "../utils/colors";
+import { View, StyleSheet, Image, Text } from "react-native";
 
 interface Props {}
 
-const heading = "OnlineMarketplace for Used Goods";
+const heading = "Online Marketplace for Used Goods";
 const subHeading =
   "Buy or sell used goods with trust. Chat directly with sellers, ensuring a seamless, authentic experience.";
 
@@ -39,8 +32,8 @@ const styles = StyleSheet.create({
     height: 250,
   },
   heading: {
-    fontSize: 20,
     fontWeight: "600",
+    fontSize: 20,
     textAlign: "center",
     letterSpacing: 1,
     marginBottom: 5,
