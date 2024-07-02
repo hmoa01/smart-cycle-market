@@ -7,10 +7,12 @@ import FormNavigator from "@ui/FormNavigator";
 import WelcomeHeader from "@ui/WelcomeHeader";
 import { useNavigation } from "expo-router";
 import { FC, useState } from "react";
-import { View, StyleSheet, Platform } from "react-native";
-import axios from "axios";
+import { View, StyleSheet } from "react-native";
 import { newUserSchema, yupValidate } from "../utils/validator";
 import { runAxiosAsync } from "../api/runAxiosAsync";
+import { showMessage } from "react-native-flash-message";
+import client from "../api/client";
+import { SignInResponse } from "./SignIn";
 
 interface Props {}
 
@@ -20,24 +22,33 @@ const SignUp: FC<Props> = (props) => {
     email: "",
     password: "",
   });
+  const [busy, setBusy] = useState(false);
   const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
 
   const handleChange = (name: string) => (text: string) =>
     setUserInfo({ ...userInfo, [name]: text });
 
-  const apiUrl =
-    Platform.OS === "android"
-      ? "http://10.0.2.2:8000" // Android Emulator
-      : "http://localhost:8000"; // iOS Simulator or Web
-
   const handleSubmit = async () => {
     const { values, error } = await yupValidate(newUserSchema, userInfo);
 
+    if (error) {
+      return showMessage({
+        message: error,
+        type: "danger",
+      });
+    }
+    setBusy(true);
     const res = await runAxiosAsync<{ message: string }>(
-      axios.post(`${apiUrl}/auth/sign-up`, values)
+      client.post("/auth/sign-up", values)
     );
-
-    console.log(res);
+    if (res?.message) {
+      showMessage({ message: res.message, type: "success" });
+      const signInResponse = await runAxiosAsync<SignInResponse>(
+        client.post("/auth/sign-in", values)
+      );
+      console.log(signInResponse);
+    }
+    setBusy(false);
   };
   const { name, email, password } = userInfo;
 
@@ -66,7 +77,7 @@ const SignUp: FC<Props> = (props) => {
             onChangeText={handleChange("password")}
           />
 
-          <AppButton onPress={handleSubmit} title="Sign Up" />
+          <AppButton active={!busy} onPress={handleSubmit} title="Sign Up" />
           <FormDivider />
 
           <FormNavigator

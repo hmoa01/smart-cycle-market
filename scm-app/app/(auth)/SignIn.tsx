@@ -6,13 +6,59 @@ import FormInput from "@ui/FormInput";
 import FormNavigator from "@ui/FormNavigator";
 import WelcomeHeader from "@ui/WelcomeHeader";
 import { useNavigation } from "expo-router";
-import { FC } from "react";
+import { FC, useState } from "react";
 import { View, StyleSheet } from "react-native";
+import { showMessage } from "react-native-flash-message";
+import { runAxiosAsync } from "../api/runAxiosAsync";
+import { signInSchema, yupValidate } from "../utils/validator";
+import client from "../api/client";
 
 interface Props {}
 
+export interface SignInResponse {
+  profile: {
+    id: string;
+    name: string;
+    email: string;
+    verified: boolean;
+    avatar?: string;
+  };
+  tokens: {
+    refresh: string;
+    access: string;
+  };
+}
+
 const SignIn: FC<Props> = (props) => {
+  const [userInfo, setUserInfo] = useState({
+    email: "",
+    password: "",
+  });
+  const [busy, setBusy] = useState(false);
   const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
+
+  const handleChange = (name: string) => (text: string) =>
+    setUserInfo({ ...userInfo, [name]: text });
+
+  const handleSubmit = async () => {
+    const { values, error } = await yupValidate(signInSchema, userInfo);
+
+    if (error) {
+      return showMessage({
+        message: error,
+        type: "danger",
+      });
+    }
+    setBusy(true);
+    const res = await runAxiosAsync<SignInResponse>(
+      client.post("/auth/sign-in", values)
+    );
+    if (res) {
+      console.log(res);
+    }
+    setBusy(false);
+  };
+  const { email, password } = userInfo;
 
   return (
     <CustomKeyAvoidingView>
@@ -24,10 +70,17 @@ const SignIn: FC<Props> = (props) => {
             placeholder="Email"
             keyboardType="email-address"
             autoCapitalize="none"
+            value={email}
+            onChangeText={handleChange("email")}
           />
-          <FormInput placeholder="Password" secureTextEntry />
+          <FormInput
+            placeholder="Password"
+            secureTextEntry
+            value={password}
+            onChangeText={handleChange("password")}
+          />
 
-          <AppButton title="Sign in" />
+          <AppButton active={!busy} onPress={handleSubmit} title="Sign in" />
 
           <FormDivider />
 

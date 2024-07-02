@@ -4,20 +4,24 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import SignIn from "./SignIn";
 import { useLayoutEffect } from "react";
 import { useNavigation } from "expo-router";
+import Home from "../(dashboard)/Home";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
+  const isLogged = false;
+
+  let headerTitle = !isLogged ? "Sign In" : "Home";
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerTitle: "Sign In",
+      headerTitle: headerTitle,
       headerTitleAlign: "center",
     });
   }, [navigation]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <SignIn />
+      {!isLogged ? <SignIn /> : <Home />}
     </SafeAreaView>
   );
 }

@@ -10,6 +10,8 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
+import FlashMessage from "react-native-flash-message";
+import { StatusBar } from "react-native";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -32,6 +34,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <FlashMessage
+        position="top"
+        hideStatusBar={false}
+        statusBarHeight={StatusBar.currentHeight}
+      />
       <Stack initialRouteName="(auth)/SignIn">
         <Stack.Screen
           name="(auth)/SignIn"
@@ -51,6 +58,13 @@ export default function RootLayout() {
           name="(auth)/ForgetPassword"
           options={{
             headerTitle: "Forget Password",
+            headerTitleAlign: "center",
+          }}
+        />
+        <Stack.Screen
+          name="(dashboard)/Home"
+          options={{
+            headerTitle: "Home",
             headerTitleAlign: "center",
           }}
         />

@@ -1,4 +1,5 @@
-import axios, { AxiosError, AxiosResponse } from "axios";
+import { AxiosError, AxiosResponse } from "axios";
+import { showMessage } from "react-native-flash-message";
 
 type SuccessResponse<T> = {
   data: T;
@@ -11,18 +12,23 @@ type ErrorResponse<E> = {
 
 export const runAxiosAsync = async <T>(
   promise: Promise<AxiosResponse<T>>
-): Promise<SuccessResponse<T> | ErrorResponse<string>> => {
+): Promise<T | null> => {
   try {
-    const { data } = await promise;
-    return { data, error: null };
+    const response = await promise;
+    return response.data;
   } catch (error) {
+    let message = (error as any).message;
     if (error instanceof AxiosError) {
       const response = error.response;
 
       if (response) {
-        return { error: response.data.message, data: null };
+        message = response.data.message;
       }
     }
-    return { error: (error as any).message, data: null };
+    showMessage({
+      message,
+      type: "danger",
+    });
   }
+  return null;
 };
