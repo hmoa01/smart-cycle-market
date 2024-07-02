@@ -12,6 +12,9 @@ import { showMessage } from "react-native-flash-message";
 import { runAxiosAsync } from "../api/runAxiosAsync";
 import { signInSchema, yupValidate } from "../utils/validator";
 import client from "../api/client";
+import { useDispatch } from "react-redux";
+import { updateAuthState } from "../store/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Props {}
 
@@ -36,6 +39,7 @@ const SignIn: FC<Props> = (props) => {
   });
   const [busy, setBusy] = useState(false);
   const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
+  const dispatch = useDispatch();
 
   const handleChange = (name: string) => (text: string) =>
     setUserInfo({ ...userInfo, [name]: text });
@@ -55,6 +59,9 @@ const SignIn: FC<Props> = (props) => {
     );
     if (res) {
       console.log(res);
+      await AsyncStorage.setItem("access_token", res.tokens.access);
+      await AsyncStorage.setItem("refresh_token", res.tokens.refresh);
+      dispatch(updateAuthState({ pending: false, profile: res.profile }));
     }
     setBusy(false);
   };
