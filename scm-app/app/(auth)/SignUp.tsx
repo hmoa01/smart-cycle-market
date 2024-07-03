@@ -13,6 +13,7 @@ import { runAxiosAsync } from "../api/runAxiosAsync";
 import { showMessage } from "react-native-flash-message";
 import client from "../api/client";
 import { SignInResponse } from "./SignIn";
+import useAuth from "../hooks/useAuth";
 
 interface Props {}
 
@@ -24,6 +25,7 @@ const SignUp: FC<Props> = (props) => {
   });
   const [busy, setBusy] = useState(false);
   const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
+  const { signIn } = useAuth();
 
   const handleChange = (name: string) => (text: string) =>
     setUserInfo({ ...userInfo, [name]: text });
@@ -47,6 +49,7 @@ const SignUp: FC<Props> = (props) => {
         client.post("/auth/sign-in", values)
       );
       console.log(signInResponse);
+      signIn(values!);
     }
     setBusy(false);
   };

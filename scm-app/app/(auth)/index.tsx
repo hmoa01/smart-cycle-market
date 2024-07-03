@@ -10,19 +10,22 @@ import { useDispatch, useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { runAxiosAsync } from "../api/runAxiosAsync";
 import client from "../api/client";
+import LoadingSpinner from "../ui/LoadingSpinner";
+import useAuth from "../hooks/useAuth";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
-  const authState = useSelector(getAuthState);
   const dispatch = useDispatch();
 
-  const isLogged = authState.profile ? true : false;
+  const { isLogged, authState } = useAuth();
 
   let headerTitle = !isLogged ? "Sign In" : "Home";
 
   const fetchAuthState = async () => {
     const token = await AsyncStorage.getItem("access_token");
     if (token) {
+      dispatch(updateAuthState({ pending: true, profile: null }));
+
       const res = await runAxiosAsync<{ profile: Profile }>(
         client.get("/auth/profile", {
           headers: {
@@ -33,6 +36,8 @@ export default function HomeScreen() {
 
       if (res) {
         dispatch(updateAuthState({ pending: false, profile: res.profile }));
+      } else {
+        dispatch(updateAuthState({ pending: false, profile: null }));
       }
     }
   };
@@ -50,6 +55,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <LoadingSpinner visible={authState.pending} />
       {!isLogged ? <SignIn /> : <Home />}
     </SafeAreaView>
   );

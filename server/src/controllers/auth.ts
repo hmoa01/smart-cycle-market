@@ -185,7 +185,7 @@ export const generateForgetPassLink: RequestHandler = async (req, res) => {
 
   await PasswordResetTokenModel.findOneAndDelete({ owner: user._id });
 
-  const token = crypto.randomBytes(36).toString("hex");
+  const token = await crypto.randomBytes(36).toString("hex");
   await PasswordResetTokenModel.create({ owner: user._id, token });
 
   const link = `${process.env.FORGET_PASSWORD_LINK}?id=${user._id}&token=${token}`;

@@ -11,7 +11,7 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import FlashMessage from "react-native-flash-message";
-import { StatusBar } from "react-native";
+import { Modal, StatusBar } from "react-native";
 import { Provider } from "react-redux";
 import store from "./store";
 

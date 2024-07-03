@@ -9,12 +9,8 @@ import { useNavigation } from "expo-router";
 import { FC, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { showMessage } from "react-native-flash-message";
-import { runAxiosAsync } from "../api/runAxiosAsync";
 import { signInSchema, yupValidate } from "../utils/validator";
-import client from "../api/client";
-import { useDispatch } from "react-redux";
-import { updateAuthState } from "../store/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import useAuth from "../hooks/useAuth";
 
 interface Props {}
 
@@ -39,7 +35,7 @@ const SignIn: FC<Props> = (props) => {
   });
   const [busy, setBusy] = useState(false);
   const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
-  const dispatch = useDispatch();
+  const { signIn } = useAuth();
 
   const handleChange = (name: string) => (text: string) =>
     setUserInfo({ ...userInfo, [name]: text });
@@ -53,17 +49,8 @@ const SignIn: FC<Props> = (props) => {
         type: "danger",
       });
     }
-    setBusy(true);
-    const res = await runAxiosAsync<SignInResponse>(
-      client.post("/auth/sign-in", values)
-    );
-    if (res) {
-      console.log(res);
-      await AsyncStorage.setItem("access_token", res.tokens.access);
-      await AsyncStorage.setItem("refresh_token", res.tokens.refresh);
-      dispatch(updateAuthState({ pending: false, profile: res.profile }));
-    }
-    setBusy(false);
+
+    if (values) signIn(values);
   };
   const { email, password } = userInfo;
 
