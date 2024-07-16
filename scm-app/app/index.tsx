@@ -1,25 +1,25 @@
-import { Platform, StatusBar, StyleSheet } from "react-native";
-
+import React, { useEffect, useLayoutEffect } from "react";
+import { Platform, StatusBar, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SignIn from "./SignIn";
-import { useEffect, useLayoutEffect } from "react";
 import { useNavigation } from "expo-router";
-import Home from "../(dashboard)/Home";
-import { Profile, getAuthState, updateAuthState } from "../store/auth";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { runAxiosAsync } from "../api/runAxiosAsync";
-import client from "../api/client";
-import LoadingSpinner from "../ui/LoadingSpinner";
-import useAuth from "../hooks/useAuth";
+import useAuth from "./hooks/useAuth";
+import { Profile, updateAuthState } from "./store/auth";
+import client from "./api/client";
+import { runAxiosAsync } from "./api/runAxiosAsync";
+import LoadingSpinner from "./ui/LoadingSpinner";
+import SignIn from "./(auth)/SignIn";
+import TabLayout from "./(tabs)/_layout";
+import HomeScreen from "./(tabs)";
 
-export default function HomeScreen() {
+export default function Home() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
 
   const { isLogged, authState } = useAuth();
 
-  let headerTitle = !isLogged ? "Sign In" : "Home";
+  const headerTitle = isLogged ? "Home 2" : "Sign In";
 
   const fetchAuthState = async () => {
     const token = await AsyncStorage.getItem("access_token");
@@ -29,7 +29,7 @@ export default function HomeScreen() {
       const res = await runAxiosAsync<{ profile: Profile }>(
         client.get("/auth/profile", {
           headers: {
-            Authorization: "Bearer" + token,
+            Authorization: `Bearer ${token}`,
           },
         })
       );
@@ -51,15 +51,16 @@ export default function HomeScreen() {
       headerTitle: headerTitle,
       headerTitleAlign: "center",
     });
-  }, [navigation]);
+  }, [navigation, headerTitle]);
 
   return (
     <SafeAreaView style={styles.container}>
       <LoadingSpinner visible={authState.pending} />
-      {!isLogged ? <SignIn /> : <Home />}
+      {!isLogged ? <SignIn /> : <HomeScreen />}
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

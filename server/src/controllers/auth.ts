@@ -33,6 +33,7 @@ export const createNewUser: RequestHandler = async (req, res) => {
   await AuthVerificationTokenModel.create({ owner: user._id, token });
 
   const link = `${process.env.VERIFICATION_LINK}?id=${user._id}&token=${token}`;
+  console.log(link);
 
   mail.sendVerification(user.email, link);
 

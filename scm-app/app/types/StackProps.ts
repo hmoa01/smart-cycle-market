@@ -3,4 +3,5 @@ type AuthStackParamList = {
   "(auth)/SignIn": undefined;
   "(auth)/SignUp": undefined;
   "(auth)/ForgetPassword": undefined;
+  "(tabs)": undefined;
 };

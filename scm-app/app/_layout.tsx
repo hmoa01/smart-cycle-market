@@ -11,18 +11,21 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 import FlashMessage from "react-native-flash-message";
-import { Modal, StatusBar } from "react-native";
+import { StatusBar } from "react-native";
 import { Provider } from "react-redux";
 import store from "./store";
+import useAuth from "./hooks/useAuth";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayoutContent() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
+
+  const { isLogged } = useAuth();
 
   useEffect(() => {
     if (loaded) {
@@ -36,45 +39,50 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Provider store={store}>
-        <FlashMessage
-          position="top"
-          hideStatusBar={false}
-          statusBarHeight={StatusBar.currentHeight}
+      <FlashMessage
+        position="top"
+        hideStatusBar={false}
+        statusBarHeight={StatusBar.currentHeight}
+      />
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="views/Home"
+          options={{ headerTitle: "Home", headerTitleAlign: "center" }}
         />
-        <Stack initialRouteName="(auth)/SignIn">
-          <Stack.Screen
-            name="(auth)/SignIn"
-            options={{
-              headerTitle: "Sign In",
-              headerTitleAlign: "center",
-            }}
-          />
-          <Stack.Screen
-            name="(auth)/SignUp"
-            options={{
-              headerTitle: "Sign Up",
-              headerTitleAlign: "center",
-            }}
-          />
-          <Stack.Screen
-            name="(auth)/ForgetPassword"
-            options={{
-              headerTitle: "Forget Password",
-              headerTitleAlign: "center",
-            }}
-          />
-          <Stack.Screen
-            name="(dashboard)/Home"
-            options={{
-              headerTitle: "Home",
-              headerTitleAlign: "center",
-            }}
-          />
-          {/* <Stack.Screen name="(tabs)" options={{ headerShown: false }} /> */}
-          {/* <Stack.Screen name="+not-found" /> */}
-        </Stack>
-      </Provider>
+
+        <Stack.Screen
+          name="(auth)/SignIn"
+          options={{
+            headerTitle: "Sign In",
+            headerTitleAlign: "center",
+          }}
+        />
+        <Stack.Screen
+          name="(auth)/SignUp"
+          options={{
+            headerTitle: "Sign Up",
+            headerTitleAlign: "center",
+          }}
+        />
+        <Stack.Screen
+          name="(auth)/ForgetPassword"
+          options={{
+            headerTitle: "Forget Password",
+            headerTitleAlign: "center",
+          }}
+        />
+
+        <Stack.Screen name="+not-found" />
+      </Stack>
     </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <Provider store={store}>
+      <RootLayoutContent />
+    </Provider>
   );
 }
