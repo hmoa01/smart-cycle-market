@@ -19,13 +19,26 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="newListing"
+        options={{
+          headerTitleAlign: "center",
+          title: "New Listings",
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              name={focused ? "add-circle" : "add-circle-outline"}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{
           headerTitleAlign: "center",
           title: "Profile",
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon
-              name={focused ? "add-circle" : "add-circle-outline"}
+              name={focused ? "person" : "person-outline"}
               color={color}
             />
           ),
