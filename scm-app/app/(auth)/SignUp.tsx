@@ -40,7 +40,7 @@ const SignUp: FC<Props> = (props) => {
       });
     }
     setBusy(true);
-    const res = await runAxiosAsync<{ message: string }>(
+    const res = await runAxiosAsync<{ message: string | undefined }>(
       client.post("/auth/sign-up", values)
     );
     if (res?.message) {

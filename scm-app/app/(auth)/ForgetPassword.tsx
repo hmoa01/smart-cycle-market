@@ -29,13 +29,13 @@ const ForgetPassword: FC<Props> = (props) => {
       });
     }
     setBusy(true);
-    const res = await runAxiosAsync<{ message: string }>(
+    const res = await runAxiosAsync<{ message: string | undefined }>(
       client.post("/auth/forget-password", { email })
     );
     setBusy(false);
     if (res) {
       showMessage({
-        message: res.message,
+        message: res.message ?? "Please check your email",
         type: "success",
       });
     }

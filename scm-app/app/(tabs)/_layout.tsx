@@ -10,6 +10,9 @@ export default function TabLayout() {
         options={{
           headerTitleAlign: "center",
           title: "Home",
+          tabBarLabelStyle: {
+            display: "none",
+          },
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon
               name={focused ? "home" : "home-outline"}
@@ -23,6 +26,9 @@ export default function TabLayout() {
         options={{
           headerTitleAlign: "center",
           title: "New Listings",
+          tabBarLabelStyle: {
+            display: "none",
+          },
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon
               name={focused ? "add-circle" : "add-circle-outline"}
@@ -36,6 +42,9 @@ export default function TabLayout() {
         options={{
           headerTitleAlign: "center",
           title: "Profile",
+          tabBarLabelStyle: {
+            display: "none",
+          },
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon
               name={focused ? "person" : "person-outline"}
