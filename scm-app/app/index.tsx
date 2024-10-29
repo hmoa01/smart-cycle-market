@@ -11,6 +11,8 @@ import { runAxiosAsync } from "./api/runAxiosAsync";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import SignIn from "./(auth)/SignIn";
 import { NavigationProp } from "@react-navigation/native";
+import useClient from "@/hooks/useClient";
+import asyncStorage, { Keys } from "./utils/asyncStorage";
 
 export default function Home() {
   const navigation = useNavigation();
@@ -18,16 +20,17 @@ export default function Home() {
   const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
 
   const { isLogged, authState } = useAuth();
+  const { authClient } = useClient();
 
   const headerTitle = isLogged ? "Home" : "Sign In";
 
   const fetchAuthState = async () => {
-    const token = await AsyncStorage.getItem("access_token");
+    const token = await asyncStorage.get(Keys.AUTH_TOKEN);
     if (token) {
       dispatch(updateAuthState({ pending: true, profile: null }));
 
       const res = await runAxiosAsync<{ profile: Profile }>(
-        client.get("/auth/profile", {
+        authClient.get("/auth/profile", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

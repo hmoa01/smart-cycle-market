@@ -7,6 +7,7 @@ export type Profile = {
   email: string;
   verified: boolean;
   avatar?: string;
+  accessToken: string;
 };
 
 interface AuthState {
