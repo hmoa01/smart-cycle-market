@@ -13,6 +13,7 @@ import CustomKeyAvoidingView from "../ui/CustomKeyAvoidingView";
 import * as ImagePicker from "expo-image-picker";
 import { showMessage } from "react-native-flash-message";
 import HorizontalImageList from "../components/HorizontalImageList";
+import { newProductSchema, yupValidate } from "../utils/validator";
 
 interface Props {}
 
@@ -24,8 +25,12 @@ const defaultInfo = {
   purchasingDate: new Date(),
 };
 
+const imageOptions = [{ value: "Remove Image", id: "remove" }];
+
 const NewListings: FC<Props> = (props) => {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showImageOptions, setShowImageOptions] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
   const [productInfo, setProductInfo] = useState({ ...defaultInfo });
   const [images, setImages] = useState<string[]>([]);
 
@@ -35,7 +40,11 @@ const NewListings: FC<Props> = (props) => {
     setProductInfo({ ...productInfo, [name]: text });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    const { error } = await yupValidate(newProductSchema, productInfo);
+
+    if (error) showMessage({ message: error, type: "danger" });
+
     console.log(productInfo);
   };
 
@@ -74,7 +83,10 @@ const NewListings: FC<Props> = (props) => {
 
           <HorizontalImageList
             images={images}
-            onLongPress={(img) => console.log(img)}
+            onLongPress={(img) => {
+              setSelectedImage(img);
+              setShowImageOptions(true);
+            }}
           />
         </View>
 
@@ -123,6 +135,22 @@ const NewListings: FC<Props> = (props) => {
             setProductInfo({ ...productInfo, category: item.name })
           }
         />
+
+        {/* Image Options */}
+        <OptionModal
+          visible={showImageOptions}
+          onRequestClose={setShowImageOptions}
+          options={imageOptions}
+          renderItem={(item) => (
+            <Text style={styles.imageOption}>{item.value}</Text>
+          )}
+          onPress={(option) => {
+            if (option.id === "remove") {
+              const newImages = images.filter((img) => img !== selectedImage);
+              setImages([...newImages]);
+            }
+          }}
+        />
       </View>
     </CustomKeyAvoidingView>
   );
@@ -170,6 +198,12 @@ const styles = StyleSheet.create({
   },
   categoryTitle: {
     color: colors.primary,
+  },
+  imageOption: {
+    fontWeight: "700",
+    fontSize: 18,
+    color: colors.primary,
+    padding: 10,
   },
 });
 
