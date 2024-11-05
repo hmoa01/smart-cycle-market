@@ -14,6 +14,10 @@ import * as ImagePicker from "expo-image-picker";
 import { showMessage } from "react-native-flash-message";
 import HorizontalImageList from "../components/HorizontalImageList";
 import { newProductSchema, yupValidate } from "../utils/validator";
+import mime from "mime";
+
+import { runAxiosAsync } from "../api/runAxiosAsync";
+import useClient from "../hooks/useClient";
 
 interface Props {}
 
@@ -33,7 +37,7 @@ const NewListings: FC<Props> = (props) => {
   const [selectedImage, setSelectedImage] = useState("");
   const [productInfo, setProductInfo] = useState({ ...defaultInfo });
   const [images, setImages] = useState<string[]>([]);
-
+  const { authClient } = useClient();
   const { category, name, description, price, purchasingDate } = productInfo;
 
   const handleChange = (name: string) => (text: string) => {
@@ -45,7 +49,36 @@ const NewListings: FC<Props> = (props) => {
 
     if (error) showMessage({ message: error, type: "danger" });
 
-    console.log(productInfo);
+    const formData = new FormData();
+
+    type productInfoKeys = keyof typeof productInfo;
+
+    for (let key in productInfo) {
+      const value = productInfo[key as productInfoKeys];
+
+      if (value instanceof Date) formData.append(key, value.toISOString());
+      else formData.append(key, value);
+    }
+
+    const newImages = images.map((img, index) => ({
+      name: "image_" + index,
+      mimetype: mime.getType(img),
+      uri: img,
+    }));
+
+    for (let img of newImages) {
+      formData.append("images", img as any);
+    }
+
+    const res = await runAxiosAsync(
+      authClient.post("/product/list", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+    );
+
+    console.log(res);
   };
 
   const handleOnImageSelection = async () => {

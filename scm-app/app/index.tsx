@@ -3,16 +3,15 @@ import { Platform, StatusBar, StyleSheet, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, useNavigation } from "expo-router";
 import { useDispatch } from "react-redux";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import useAuth from "./hooks/useAuth";
 import { Profile, updateAuthState } from "./store/auth";
-import client from "./api/client";
 import { runAxiosAsync } from "./api/runAxiosAsync";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import SignIn from "./(auth)/SignIn";
 import { NavigationProp } from "@react-navigation/native";
-import useClient from "@/hooks/useClient";
+
 import asyncStorage, { Keys } from "./utils/asyncStorage";
+import useClient from "./hooks/useClient";
 
 export default function Home() {
   const navigation = useNavigation();

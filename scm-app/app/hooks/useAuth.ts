@@ -1,11 +1,23 @@
-import { useDispatch, useSelector } from "react-redux";
-import { runAxiosAsync } from "../api/runAxiosAsync";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getAuthState, updateAuthState } from "../store/auth";
-import { SignInResponse } from "../(auth)/SignIn";
-import client from "../api/client";
-import { NavigationProp, useNavigation } from "@react-navigation/native";
-import asyncStorage, { Keys } from "../utils/asyncStorage";
+import asyncStorage, { Keys } from "@utils/asyncStorage";
+import client from "app/api/client";
+import { runAxiosAsync } from "app/api/runAxiosAsync";
+import { getAuthState, updateAuthState } from "app/store/auth";
+import { useDispatch, useSelector } from "react-redux";
+
+export interface SignInRes {
+  profile: {
+    id: string;
+    email: string;
+    name: string;
+    verified: boolean;
+    avatar?: string;
+  };
+  tokens: {
+    refresh: string;
+    access: string;
+  };
+}
 
 type UserInfo = {
   email: string;
@@ -15,39 +27,33 @@ type UserInfo = {
 const useAuth = () => {
   const dispatch = useDispatch();
   const authState = useSelector(getAuthState);
-  const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
 
   const signIn = async (userInfo: UserInfo) => {
-    dispatch(updateAuthState({ pending: true, profile: null }));
-
-    const res = await runAxiosAsync<SignInResponse>(
+    dispatch(updateAuthState({ profile: null, pending: true }));
+    const res = await runAxiosAsync<SignInRes>(
       client.post("/auth/sign-in", userInfo)
     );
+
     if (res) {
+      // store the tokens
       await asyncStorage.save(Keys.AUTH_TOKEN, res.tokens.access);
       await asyncStorage.save(Keys.REFRESH_TOKEN, res.tokens.refresh);
-
-      // await AsyncStorage.setItem("access_token", res.tokens.access);
-      // await AsyncStorage.setItem("refresh_token", res.tokens.refresh);
+      // await AsyncStorage.setItem("access-token", res.tokens.access);
+      // await AsyncStorage.setItem("refresh-token", res.tokens.refresh);
       dispatch(
         updateAuthState({
-          pending: false,
           profile: { ...res.profile, accessToken: res.tokens.access },
+          pending: false,
         })
       );
-      navigate("(tabs)");
     } else {
-      dispatch(updateAuthState({ pending: true, profile: null }));
+      dispatch(updateAuthState({ profile: null, pending: false }));
     }
   };
 
-  const isLogged = !!authState.profile;
+  const loggedIn = authState.profile ? true : false;
 
-  return {
-    signIn,
-    authState,
-    isLogged,
-  };
+  return { signIn, authState, loggedIn };
 };
 
 export default useAuth;
