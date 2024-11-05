@@ -1,8 +1,9 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { NavigationProp } from "@react-navigation/native";
 import asyncStorage, { Keys } from "@utils/asyncStorage";
 import client from "app/api/client";
 import { runAxiosAsync } from "app/api/runAxiosAsync";
 import { getAuthState, updateAuthState } from "app/store/auth";
+import { useNavigation } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 
 export interface SignInRes {
@@ -27,9 +28,11 @@ type UserInfo = {
 const useAuth = () => {
   const dispatch = useDispatch();
   const authState = useSelector(getAuthState);
+  const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
 
   const signIn = async (userInfo: UserInfo) => {
     dispatch(updateAuthState({ profile: null, pending: true }));
+
     const res = await runAxiosAsync<SignInRes>(
       client.post("/auth/sign-in", userInfo)
     );
@@ -46,6 +49,7 @@ const useAuth = () => {
           pending: false,
         })
       );
+      navigate("(tabs)");
     } else {
       dispatch(updateAuthState({ profile: null, pending: false }));
     }

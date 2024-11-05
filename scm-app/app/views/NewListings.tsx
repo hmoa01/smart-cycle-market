@@ -1,23 +1,30 @@
-import React, { FC, useState } from "react";
-import { View, StyleSheet, Text, Pressable } from "react-native";
-import FormInput from "../ui/FormInput";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
-import colors from "../utils/colors";
-import DatePicker from "../ui/DatePicker";
-import OptionModal from "../components/OptionModal";
-import categories from "../utils/categories";
-import CategoryOption from "../ui/CategoryOption";
+import FormInput from "@ui/FormInput";
+import { FC, useState } from "react";
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Text,
+  FlatList,
+  Image,
+} from "react-native";
+import mime from "mime";
+import { FontAwesome5 } from "@expo/vector-icons";
+import colors from "@utils/colors";
+import DatePicker from "@ui/DatePicker";
+import OptionModal from "@components/OptionModal";
+import categories from "@utils/categories";
+import CategoryOption from "@ui/CategoryOption";
 import { AntDesign } from "@expo/vector-icons";
-import AppButton from "../ui/AppButton";
-import CustomKeyAvoidingView from "../ui/CustomKeyAvoidingView";
+import AppButton from "@ui/AppButton";
+import CustomKeyAvoidingView from "@ui/CustomKeyAvoidingView";
 import * as ImagePicker from "expo-image-picker";
 import { showMessage } from "react-native-flash-message";
-import HorizontalImageList from "../components/HorizontalImageList";
-import { newProductSchema, yupValidate } from "../utils/validator";
-import mime from "mime";
-
-import { runAxiosAsync } from "../api/runAxiosAsync";
-import useClient from "../hooks/useClient";
+import HorizontalImageList from "@components/HorizontalImageList";
+import { newProductSchema, yupValidate } from "@utils/validator";
+import useClient from "app/hooks/useClient";
+import { runAxiosAsync } from "app/api/runAxiosAsync";
+import LoadingSpinner from "@ui/LoadingSpinner";
 
 interface Props {}
 
@@ -31,14 +38,16 @@ const defaultInfo = {
 
 const imageOptions = [{ value: "Remove Image", id: "remove" }];
 
-const NewListings: FC<Props> = (props) => {
+const NewListing: FC<Props> = (props) => {
+  const [productInfo, setProductInfo] = useState({ ...defaultInfo });
+  const [busy, setBusy] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showImageOptions, setShowImageOptions] = useState(false);
-  const [selectedImage, setSelectedImage] = useState("");
-  const [productInfo, setProductInfo] = useState({ ...defaultInfo });
   const [images, setImages] = useState<string[]>([]);
+  const [selectedImage, setSelectedImage] = useState("");
   const { authClient } = useClient();
-  const { category, name, description, price, purchasingDate } = productInfo;
+
+  const { category, description, name, price, purchasingDate } = productInfo;
 
   const handleChange = (name: string) => (text: string) => {
     setProductInfo({ ...productInfo, [name]: text });
@@ -46,9 +55,10 @@ const NewListings: FC<Props> = (props) => {
 
   const handleSubmit = async () => {
     const { error } = await yupValidate(newProductSchema, productInfo);
+    if (error) return showMessage({ message: error, type: "danger" });
 
-    if (error) showMessage({ message: error, type: "danger" });
-
+    setBusy(true);
+    // submit this form
     const formData = new FormData();
 
     type productInfoKeys = keyof typeof productInfo;
@@ -60,9 +70,10 @@ const NewListings: FC<Props> = (props) => {
       else formData.append(key, value);
     }
 
+    // appending images
     const newImages = images.map((img, index) => ({
       name: "image_" + index,
-      mimetype: mime.getType(img),
+      type: mime.getType(img),
       uri: img,
     }));
 
@@ -70,15 +81,25 @@ const NewListings: FC<Props> = (props) => {
       formData.append("images", img as any);
     }
 
-    const res = await runAxiosAsync(
+    const res = await runAxiosAsync<{ message: string }>(
       authClient.post("/product/list", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       })
     );
+    setBusy(false);
+
+    if (res) {
+      showMessage({ message: res.message, type: "success" });
+      setProductInfo({ ...defaultInfo });
+      setImages([]);
+    }
 
     console.log(res);
+
+    //  formData.append("name", productInfo.name)
+    //  formData.append("category", productInfo.category)
   };
 
   const handleOnImageSelection = async () => {
@@ -92,7 +113,6 @@ const NewListings: FC<Props> = (props) => {
 
       if (!assets) return;
 
-      // console.log(JSON.stringify(assets, null, 2));
       const imageUris = assets.map(({ uri }) => uri);
       setImages([...images, ...imageUris]);
     } catch (error) {
@@ -105,8 +125,8 @@ const NewListings: FC<Props> = (props) => {
       <View style={styles.container}>
         <View style={styles.imageContainer}>
           <Pressable
-            style={styles.fileSelector}
             onPress={handleOnImageSelection}
+            style={styles.fileSelector}
           >
             <View style={styles.iconContainer}>
               <FontAwesome5 name="images" size={24} color="black" />
@@ -121,12 +141,24 @@ const NewListings: FC<Props> = (props) => {
               setShowImageOptions(true);
             }}
           />
+
+          {/* <FlatList
+            data={images}
+            renderItem={({ item }) => {
+              return (
+                <Image style={styles.selectedImage} source={{ uri: item }} />
+              );
+            }}
+            keyExtractor={(item) => item}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+          /> */}
         </View>
 
         <FormInput
           value={name}
-          onChangeText={handleChange("name")}
           placeholder="Product name"
+          onChangeText={handleChange("name")}
         />
         <FormInput
           value={price}
@@ -135,26 +167,27 @@ const NewListings: FC<Props> = (props) => {
           keyboardType="numeric"
         />
         <DatePicker
-          title="Purchasing Date:"
+          title="Purchasing Date: "
           value={purchasingDate}
           onChange={(purchasingDate) =>
             setProductInfo({ ...productInfo, purchasingDate })
           }
         />
+
         <Pressable
           style={styles.categorySelector}
           onPress={() => setShowCategoryModal(true)}
         >
           <Text style={styles.categoryTitle}>{category || "Category"}</Text>
-          <AntDesign name="caretdown" color="black" />
+          <AntDesign name="caretdown" color={colors.primary} />
         </Pressable>
 
         <FormInput
           value={description}
-          onChangeText={handleChange("description")}
           placeholder="Description"
           multiline
           numberOfLines={4}
+          onChangeText={handleChange("description")}
         />
 
         <AppButton title="List Product" onPress={handleSubmit} />
@@ -163,7 +196,9 @@ const NewListings: FC<Props> = (props) => {
           visible={showCategoryModal}
           onRequestClose={setShowCategoryModal}
           options={categories}
-          renderItem={(item) => <CategoryOption {...item} />}
+          renderItem={(item) => {
+            return <CategoryOption {...item} />;
+          }}
           onPress={(item) =>
             setProductInfo({ ...productInfo, category: item.name })
           }
@@ -174,9 +209,9 @@ const NewListings: FC<Props> = (props) => {
           visible={showImageOptions}
           onRequestClose={setShowImageOptions}
           options={imageOptions}
-          renderItem={(item) => (
-            <Text style={styles.imageOption}>{item.value}</Text>
-          )}
+          renderItem={(item) => {
+            return <Text style={styles.imageOption}>{item.value}</Text>;
+          }}
           onPress={(option) => {
             if (option.id === "remove") {
               const newImages = images.filter((img) => img !== selectedImage);
@@ -185,6 +220,7 @@ const NewListings: FC<Props> = (props) => {
           }}
         />
       </View>
+      <LoadingSpinner visible={busy} />
     </CustomKeyAvoidingView>
   );
 };
@@ -194,8 +230,10 @@ const styles = StyleSheet.create({
     padding: 15,
     flex: 1,
   },
-  imageContainer: {
-    flexDirection: "row",
+  imageContainer: { flexDirection: "row" },
+  btnTitle: {
+    color: colors.primary,
+    marginTop: 5,
   },
   fileSelector: {
     alignItems: "center",
@@ -203,21 +241,21 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     alignSelf: "flex-start",
   },
-  btnTitle: {
-    color: colors.primary,
-    marginBottom: 5,
-  },
   iconContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 15,
     width: 70,
     height: 70,
     borderWidth: 2,
     borderColor: colors.primary,
     borderRadius: 7,
   },
-
+  selectedImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 7,
+    marginLeft: 5,
+  },
   categorySelector: {
     flexDirection: "row",
     alignItems: "center",
@@ -233,11 +271,11 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
   imageOption: {
-    fontWeight: "700",
+    fontWeight: "600",
     fontSize: 18,
     color: colors.primary,
     padding: 10,
   },
 });
 
-export default NewListings;
+export default NewListing;

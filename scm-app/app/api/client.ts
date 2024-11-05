@@ -6,8 +6,6 @@ const iosApi = process.env.EXPO_PUBLIC_IOS_SIMULATOR_API;
 
 export const baseURL = Platform.OS === "android" ? androidApi : iosApi;
 
-console.log(baseURL);
-
 const client = axios.create({
   baseURL,
 });

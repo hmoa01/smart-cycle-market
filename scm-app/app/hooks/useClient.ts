@@ -1,11 +1,11 @@
-import axios from "axios";
 import { baseURL } from "app/api/client";
+import axios from "axios";
 import createAuthRefreshInterceptor from "axios-auth-refresh";
-import useAuth from "@/app/hooks/useAuth";
-import asyncStorage, { Keys } from "@/app/utils/asyncStorage";
-import { runAxiosAsync } from "@/app/api/runAxiosAsync";
+import useAuth from "./useAuth";
+import asyncStorage, { Keys } from "@utils/asyncStorage";
+import { runAxiosAsync } from "app/api/runAxiosAsync";
 import { useDispatch } from "react-redux";
-import { updateAuthState } from "@/app/store/auth";
+import { updateAuthState } from "app/store/auth";
 
 const authClient = axios.create({ baseURL });
 
@@ -18,7 +18,6 @@ type Response = {
 
 const useClient = () => {
   const { authState } = useAuth();
-
   const dispatch = useDispatch();
 
   const token = authState.profile?.accessToken;
@@ -28,6 +27,7 @@ const useClient = () => {
       if (!config.headers.Authorization) {
         config.headers.Authorization = "Bearer " + token;
       }
+
       return config;
     },
     (error) => {
@@ -36,9 +36,10 @@ const useClient = () => {
   );
 
   const refreshAuthLogic = async (failedRequest: any) => {
-    //read refresh token from async storage
+    // read refresh token from async storage
     const refreshToken = await asyncStorage.get(Keys.REFRESH_TOKEN);
-    //send request with refresh token to get new refresh and access token
+
+    // then send request with that token to get new access and refresh token
 
     const options = {
       method: "POST",
@@ -46,7 +47,6 @@ const useClient = () => {
       url: `${baseURL}/auth/refresh-token`,
     };
     const res = await runAxiosAsync<Response>(axios(options));
-
     if (res?.tokens) {
       failedRequest.response.config.headers.Authorization =
         "Bearer " + res.tokens.access;
@@ -54,10 +54,7 @@ const useClient = () => {
       await asyncStorage.save(Keys.REFRESH_TOKEN, res.tokens.refresh);
       dispatch(
         updateAuthState({
-          profile: {
-            ...authState.profile!,
-            accessToken: res.tokens.access,
-          },
+          profile: { ...authState.profile!, accessToken: res.tokens.access },
           pending: false,
         })
       );
