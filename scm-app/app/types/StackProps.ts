@@ -5,3 +5,8 @@ type AuthStackParamList = {
   "(auth)/ForgetPassword": undefined;
   "(tabs)": undefined;
 };
+
+type ProfileStackParamList = {
+  "views/Chats": undefined;
+  "views/Listings": undefined;
+};

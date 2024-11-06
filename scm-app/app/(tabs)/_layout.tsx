@@ -40,8 +40,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          headerTitleAlign: "center",
-          title: "Profile",
+          headerShown: false,
           tabBarLabelStyle: {
             display: "none",
           },

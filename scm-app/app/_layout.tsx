@@ -25,7 +25,7 @@ function RootLayoutContent() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
-  const { isLogged } = useAuth();
+  // const { isLogged } = useAuth();
 
   useEffect(() => {
     if (loaded) {
@@ -72,7 +72,18 @@ function RootLayoutContent() {
             headerTitleAlign: "center",
           }}
         />
-
+        <Stack.Screen
+          name="views/Chats"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="views/Listings"
+          options={{
+            headerShown: false,
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
     </ThemeProvider>

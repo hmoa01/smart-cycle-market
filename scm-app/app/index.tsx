@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, useNavigation } from "expo-router";
 import { useDispatch } from "react-redux";
 import useAuth from "./hooks/useAuth";
-import { Profile, updateAuthState } from "./store/auth";
+import { updateAuthState } from "./store/auth";
 import { runAxiosAsync } from "./api/runAxiosAsync";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import SignIn from "./(auth)/SignIn";
@@ -13,22 +13,31 @@ import { NavigationProp } from "@react-navigation/native";
 import asyncStorage, { Keys } from "./utils/asyncStorage";
 import useClient from "./hooks/useClient";
 
+type ProfileRes = {
+  profile: {
+    id: string;
+    name: string;
+    email: string;
+    verified: boolean;
+    avatar?: string;
+  };
+};
+
 export default function Home() {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const { navigate } = useNavigation<NavigationProp<AuthStackParamList>>();
 
-  const { isLogged, authState } = useAuth();
+  const { loggedIn, authState } = useAuth();
   const { authClient } = useClient();
 
-  const headerTitle = isLogged ? "Home" : "Sign In";
+  const headerTitle = loggedIn ? "Home" : "Sign In";
 
   const fetchAuthState = async () => {
     const token = await asyncStorage.get(Keys.AUTH_TOKEN);
     if (token) {
       dispatch(updateAuthState({ pending: true, profile: null }));
 
-      const res = await runAxiosAsync<{ profile: Profile }>(
+      const res = await runAxiosAsync<ProfileRes>(
         authClient.get("/auth/profile", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -37,7 +46,12 @@ export default function Home() {
       );
 
       if (res) {
-        dispatch(updateAuthState({ pending: false, profile: res.profile }));
+        dispatch(
+          updateAuthState({
+            pending: false,
+            profile: { ...res.profile, accessToken: token },
+          })
+        );
       } else {
         dispatch(updateAuthState({ pending: false, profile: null }));
       }
@@ -58,7 +72,7 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.container}>
       <LoadingSpinner visible={authState.pending} />
-      {!isLogged ? <SignIn /> : <Redirect href={"(tabs)"} />}
+      {!loggedIn ? <SignIn /> : <Redirect href={"(tabs)"} />}
     </SafeAreaView>
   );
 }
