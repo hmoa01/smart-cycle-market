@@ -3,7 +3,7 @@ import { StyleSheet, Image, Dimensions } from "react-native";
 import size from "../utils/size";
 
 interface Props {
-  uri: string;
+  uri?: string;
 }
 
 const { width } = Dimensions.get("screen");

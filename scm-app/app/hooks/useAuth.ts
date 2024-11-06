@@ -1,11 +1,12 @@
-import { NavigationProp } from "@react-navigation/native";
 import asyncStorage, { Keys } from "@utils/asyncStorage";
 import client from "app/api/client";
 import { runAxiosAsync } from "app/api/runAxiosAsync";
 import { getAuthState, updateAuthState } from "app/store/auth";
-import { useNavigation } from "expo-router";
 import { useDispatch, useSelector } from "react-redux";
 import useClient from "./useClient";
+import { useNavigation } from "expo-router";
+import { NavigationProp } from "@react-navigation/native";
+import { AuthStackParamList } from "../types/StackProps";
 
 export interface SignInRes {
   profile: {
@@ -34,7 +35,6 @@ const useAuth = () => {
 
   const signIn = async (userInfo: UserInfo) => {
     dispatch(updateAuthState({ profile: null, pending: true }));
-
     const res = await runAxiosAsync<SignInRes>(
       client.post("/auth/sign-in", userInfo)
     );
@@ -61,7 +61,6 @@ const useAuth = () => {
     const token = await asyncStorage.get(Keys.REFRESH_TOKEN);
     if (token) {
       dispatch(updateAuthState({ profile: authState.profile, pending: true }));
-
       await runAxiosAsync(
         authClient.post("/auth/sign-out", { refreshToken: token })
       );
@@ -74,7 +73,7 @@ const useAuth = () => {
 
   const loggedIn = authState.profile ? true : false;
 
-  return { signIn, authState, loggedIn, signOut };
+  return { signIn, signOut, authState, loggedIn };
 };
 
 export default useAuth;

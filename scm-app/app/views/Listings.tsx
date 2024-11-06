@@ -14,28 +14,18 @@ import useClient from "../hooks/useClient";
 import { runAxiosAsync } from "../api/runAxiosAsync";
 import size from "../utils/size";
 import ProductImage from "../ui/ProductImage";
+import { Product } from "./SingleProduct";
+import { NavigationProp } from "@react-navigation/native";
+import { useNavigation, useRouter } from "expo-router";
+import { ProfileStackParamList } from "../types/StackProps";
 
 interface Props {}
-
-type Product = {
-  id: string;
-  name: string;
-  thumbnail?: string;
-  category: string;
-  price: string;
-  image?: string[];
-  date: Date;
-  description: string;
-  seller: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-};
 
 type ListingResponse = { products: Product[] };
 
 const Listings: FC<Props> = (props) => {
+  // const { navigate } = useNavigation<NavigationProp<ProfileStackParamList>>();
+  const router = useRouter();
   const [listings, setListings] = useState<Product[]>([]);
   const { authClient } = useClient();
 
@@ -54,7 +44,7 @@ const Listings: FC<Props> = (props) => {
 
   return (
     <>
-      <AppHeader backButton={<BackButton />} />
+      <AppHeader style={styles.header} backButton={<BackButton />} />
       <View style={styles.container}>
         <FlatList
           data={listings}
@@ -62,7 +52,17 @@ const Listings: FC<Props> = (props) => {
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => {
             return (
-              <Pressable style={styles.listItem}>
+              <Pressable
+                style={styles.listItem}
+                onPress={() => {
+                  console.log(item);
+                  // navigate("views/SingleProduct", { product: item });
+                  router.push({
+                    pathname: "views/SingleProduct",
+                    params: { product: JSON.stringify(item) },
+                  });
+                }}
+              >
                 <ProductImage uri={item.thumbnail} />
                 <Text style={styles.productName} numberOfLines={2}>
                   {item.name}
@@ -78,12 +78,14 @@ const Listings: FC<Props> = (props) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     flex: 1,
     padding: size.padding,
   },
+  header: {
+    marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
   listItem: {
-    padding: size.padding,
+    paddingBottom: size.padding,
   },
   productName: {
     fontWeight: "700",

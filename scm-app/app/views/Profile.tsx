@@ -8,6 +8,7 @@ import FormDivider from "../ui/FormDivider";
 import ProfileOptionListItem from "../components/ProfileOptionListItem";
 import { useNavigation } from "expo-router";
 import { NavigationProp } from "@react-navigation/native";
+import { ProfileStackParamList } from "../types/StackProps";
 
 interface Props {}
 

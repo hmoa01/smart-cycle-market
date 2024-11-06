@@ -56,6 +56,7 @@ function RootLayoutContent() {
           options={{
             headerTitle: "Sign In",
             headerTitleAlign: "center",
+            headerBackVisible: false,
           }}
         />
         <Stack.Screen
@@ -80,6 +81,12 @@ function RootLayoutContent() {
         />
         <Stack.Screen
           name="views/Listings"
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="views/SingleProduct"
           options={{
             headerShown: false,
           }}
