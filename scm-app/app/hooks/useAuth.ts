@@ -61,6 +61,7 @@ const useAuth = () => {
     const token = await asyncStorage.get(Keys.REFRESH_TOKEN);
     if (token) {
       dispatch(updateAuthState({ profile: authState.profile, pending: true }));
+
       await runAxiosAsync(
         authClient.post("/auth/sign-out", { refreshToken: token })
       );

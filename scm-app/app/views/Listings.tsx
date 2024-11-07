@@ -14,27 +14,32 @@ import useClient from "../hooks/useClient";
 import { runAxiosAsync } from "../api/runAxiosAsync";
 import size from "../utils/size";
 import ProductImage from "../ui/ProductImage";
-import { Product } from "./SingleProduct";
-import { NavigationProp } from "@react-navigation/native";
-import { useNavigation, useRouter } from "expo-router";
-import { ProfileStackParamList } from "../types/StackProps";
+
+import { useRouter } from "expo-router";
+import { getListings, Product, updateListings } from "../store/listings";
+import { useDispatch, useSelector } from "react-redux";
 
 interface Props {}
 
 type ListingResponse = { products: Product[] };
 
 const Listings: FC<Props> = (props) => {
-  // const { navigate } = useNavigation<NavigationProp<ProfileStackParamList>>();
   const router = useRouter();
-  const [listings, setListings] = useState<Product[]>([]);
+  // const [listings, setListings] = useState<Product[]>([]);
+  const [fetching, setFetching] = useState(false);
+
   const { authClient } = useClient();
+  const dispatch = useDispatch();
+  const listings = useSelector(getListings);
 
   const fetchListings = async () => {
+    setFetching(true);
     const res = await runAxiosAsync<ListingResponse>(
       authClient.get("/product/listings")
     );
+    setFetching(false);
     if (res) {
-      setListings(res.products);
+      dispatch(updateListings(res.products));
     }
   };
 
@@ -47,6 +52,8 @@ const Listings: FC<Props> = (props) => {
       <AppHeader style={styles.header} backButton={<BackButton />} />
       <View style={styles.container}>
         <FlatList
+          refreshing={fetching}
+          onRefresh={fetchListings}
           data={listings}
           contentContainerStyle={styles.flatList}
           keyExtractor={(item) => item.id}
@@ -56,7 +63,6 @@ const Listings: FC<Props> = (props) => {
                 style={styles.listItem}
                 onPress={() => {
                   console.log(item);
-                  // navigate("views/SingleProduct", { product: item });
                   router.push({
                     pathname: "views/SingleProduct",
                     params: { product: JSON.stringify(item) },

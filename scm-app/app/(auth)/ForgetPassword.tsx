@@ -12,6 +12,7 @@ import { emailRegex } from "../utils/validator";
 import { showMessage } from "react-native-flash-message";
 import { runAxiosAsync } from "../api/runAxiosAsync";
 import client from "../api/client";
+import { AuthStackParamList } from "../types/StackProps";
 
 interface Props {}
 

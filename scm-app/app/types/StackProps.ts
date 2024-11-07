@@ -1,4 +1,4 @@
-import { Product } from "../views/SingleProduct";
+import { Product } from "../store/listings";
 
 export type AuthStackParamList = {
   "(auth)": undefined;
@@ -11,6 +11,6 @@ export type AuthStackParamList = {
 export type ProfileStackParamList = {
   "views/Chats": undefined;
   "views/Listings": undefined;
-  "views/SingleProduct": undefined;
-  // { product?: Product };
+  "views/SingleProduct": { product?: Product };
+  "views/ChatWindow": undefined;
 };

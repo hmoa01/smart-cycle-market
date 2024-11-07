@@ -91,6 +91,12 @@ function RootLayoutContent() {
             headerShown: false,
           }}
         />
+        <Stack.Screen
+          name="views/ChatWindow"
+          options={{
+            headerShown: false,
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
     </ThemeProvider>
