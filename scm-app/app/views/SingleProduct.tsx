@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import AppHeader from "../components/AppHeader";
 import BackButton from "../ui/BackButton";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import ProductDetail from "../components/ProductDetail";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import useAuth from "../hooks/useAuth";
@@ -45,6 +45,7 @@ const SingleProduct: FC<Props> = () => {
   const [busy, setBusy] = useState(false);
   const { authState } = useAuth();
   const { authClient } = useClient();
+  const router = useRouter();
   const dispatch = useDispatch();
 
   // Get the product as a string from params
@@ -126,6 +127,12 @@ const SingleProduct: FC<Props> = () => {
         onPress={(option) => {
           if (option.name === "Delete") {
             onDeletePress();
+          }
+          if (option.name === "Edit") {
+            router.push({
+              pathname: "views/EditProduct",
+              params: { product: JSON.stringify(parsedProduct) },
+            });
           }
         }}
       />

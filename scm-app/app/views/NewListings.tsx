@@ -25,6 +25,7 @@ import { newProductSchema, yupValidate } from "@utils/validator";
 import useClient from "app/hooks/useClient";
 import { runAxiosAsync } from "app/api/runAxiosAsync";
 import LoadingSpinner from "@ui/LoadingSpinner";
+import OptionSelector from "../ui/OptionSelector";
 
 interface Props {}
 
@@ -174,13 +175,10 @@ const NewListing: FC<Props> = (props) => {
           }
         />
 
-        <Pressable
-          style={styles.categorySelector}
+        <OptionSelector
+          title={category || "Category"}
           onPress={() => setShowCategoryModal(true)}
-        >
-          <Text style={styles.categoryTitle}>{category || "Category"}</Text>
-          <AntDesign name="caretdown" color={colors.primary} />
-        </Pressable>
+        />
 
         <FormInput
           value={description}
@@ -256,20 +254,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     marginLeft: 5,
   },
-  categorySelector: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "100%",
-    marginBottom: 15,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: colors.deActive,
-    borderRadius: 5,
-  },
-  categoryTitle: {
-    color: colors.primary,
-  },
+
   imageOption: {
     fontWeight: "600",
     fontSize: 18,

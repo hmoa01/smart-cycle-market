@@ -97,6 +97,12 @@ function RootLayoutContent() {
             headerShown: false,
           }}
         />
+        <Stack.Screen
+          name="views/EditProduct"
+          options={{
+            headerShown: false,
+          }}
+        />
         <Stack.Screen name="+not-found" />
       </Stack>
     </ThemeProvider>
