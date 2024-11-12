@@ -14,6 +14,7 @@ import { showMessage } from "react-native-flash-message";
 import client from "../api/client";
 import { SignInResponse } from "./SignIn";
 import useAuth from "../hooks/useAuth";
+import { AuthStackParamList } from "../types/StackProps";
 
 interface Props {}
 
@@ -48,7 +49,6 @@ const SignUp: FC<Props> = (props) => {
       const signInResponse = await runAxiosAsync<SignInResponse>(
         client.post("/auth/sign-in", values)
       );
-      console.log(signInResponse);
       signIn(values!);
     }
     setBusy(false);

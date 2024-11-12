@@ -22,13 +22,21 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import FormInput from "../ui/FormInput";
 import DatePicker from "../ui/DatePicker";
 import OptionSelector from "../ui/OptionSelector";
-import { parse } from "@babel/core";
+import OptionModal from "../components/OptionModal";
+import { runAxiosAsync } from "../api/runAxiosAsync";
 
 interface Props {}
+
+const imageOptions = [
+  { value: "Use as Thumbnail", id: "thumb" },
+  { value: "Remove Image", id: "remove" },
+];
 
 const EditProduct: FC<Props> = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [showImageOptions, setShowImageOptions] = useState(false);
   const { authState } = useAuth();
   const { authClient } = useClient();
 
@@ -51,7 +59,24 @@ const EditProduct: FC<Props> = () => {
 
   const isAdmin = authState.profile?.id === parsedProduct?.seller.id;
 
-  console.log(product);
+  const onLongPress = (image: string) => {
+    setSelectedImage(image);
+    setShowImageOptions(true);
+  };
+
+  const removeSelectedImage = async () => {
+    const notLocalImage = selectedImage.startsWith("https://ik.imagekit.io");
+    const imageId = selectedImage;
+    // const splitedItems = selectedImage.split("/");
+    // const imageId = splitedItems[splitedItems.length - 1].split(".")[0];
+    console.log(imageId);
+    if (notLocalImage) {
+      const res = await runAxiosAsync<{ message: string }>(
+        authClient.delete(`/product/image/${parsedProduct.id}/${imageId}`)
+      );
+    }
+  };
+
   return (
     <>
       <AppHeader
@@ -64,7 +89,10 @@ const EditProduct: FC<Props> = () => {
       <View style={styles.container}>
         <ScrollView>
           <Text style={styles.title}>Images</Text>
-          <HorizontalImageList images={parsedProduct.image || []} />
+          <HorizontalImageList
+            images={parsedProduct.image || []}
+            onLongPress={onLongPress}
+          />
           <Pressable style={styles.imageSelector}>
             <FontAwesome5 name="images" size={30} color={colors.primary} />
           </Pressable>
@@ -90,6 +118,19 @@ const EditProduct: FC<Props> = () => {
           />
         </ScrollView>
       </View>
+      <OptionModal
+        options={imageOptions}
+        visible={showImageOptions}
+        onRequestClose={setShowImageOptions}
+        renderItem={(option) => {
+          return <Text style={styles.option}>{option.value}</Text>;
+        }}
+        onPress={({ id }) => {
+          if (id === "thumb") {
+          }
+          if (id === "remove") removeSelectedImage();
+        }}
+      />
     </>
   );
 };
@@ -116,6 +157,10 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     borderColor: colors.primary,
     marginVertical: 10,
+  },
+  option: {
+    paddingVertical: 10,
+    color: colors.primary,
   },
 });
 

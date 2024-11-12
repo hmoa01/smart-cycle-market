@@ -62,7 +62,6 @@ const Listings: FC<Props> = (props) => {
               <Pressable
                 style={styles.listItem}
                 onPress={() => {
-                  console.log(item);
                   router.push({
                     pathname: "views/SingleProduct",
                     params: { product: JSON.stringify(item) },
