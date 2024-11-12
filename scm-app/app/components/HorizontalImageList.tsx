@@ -1,6 +1,5 @@
 import { FC } from "react";
 import {
-  View,
   StyleSheet,
   FlatList,
   Image,
@@ -10,9 +9,9 @@ import {
 } from "react-native";
 
 interface Props {
-  images: string[];
-  onPress?(item: string): void;
-  onLongPress?(item: string): void;
+  images: { url: string; id?: string }[];
+  onPress?(item: { url: string; id?: string }): void;
+  onLongPress?(item: { url: string; id?: string }): void;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -22,6 +21,7 @@ const HorizontalImageList: FC<Props> = ({
   onPress,
   onLongPress,
 }) => {
+  console.log(images);
   return (
     <FlatList
       data={images}
@@ -32,12 +32,12 @@ const HorizontalImageList: FC<Props> = ({
             onLongPress={() => onLongPress && onLongPress(item)}
             style={styles.listItem}
           >
-            <Image style={styles.image} source={{ uri: item }} />
+            <Image style={styles.image} source={{ uri: item.url }} />
           </Pressable>
         );
       }}
       contentContainerStyle={style}
-      keyExtractor={(item) => item}
+      keyExtractor={(item) => (item.id ? item.id : item.url)}
       horizontal
       showsHorizontalScrollIndicator={false}
     />

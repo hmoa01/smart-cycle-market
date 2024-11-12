@@ -5,7 +5,7 @@ import ProductImage from "../ui/ProductImage";
 import colors from "../utils/colors";
 
 interface Props {
-  images?: string[];
+  images?: { url: string; id: string }[];
 }
 
 const ImageSlider: FC<Props> = ({ images }) => {
@@ -25,7 +25,7 @@ const ImageSlider: FC<Props> = ({ images }) => {
       <FlatList
         contentContainerStyle={styles.flatList}
         data={images}
-        renderItem={({ item }) => <ProductImage uri={item} />}
+        renderItem={({ item }) => <ProductImage uri={item.url} />}
         horizontal
         showsHorizontalScrollIndicator={false}
         pagingEnabled

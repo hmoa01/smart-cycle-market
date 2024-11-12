@@ -1,5 +1,5 @@
 import React, { FC } from "react";
-import { View, StyleSheet, Text, Platform, Pressable } from "react-native";
+import { StyleSheet, Text, Platform, Pressable } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import colors from "../utils/colors";
 import { formatDate } from "../utils/date";

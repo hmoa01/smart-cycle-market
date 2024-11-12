@@ -44,7 +44,7 @@ const NewListing: FC<Props> = (props) => {
   const [busy, setBusy] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showImageOptions, setShowImageOptions] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<{ url: string; id?: string }[]>([]);
   const [selectedImage, setSelectedImage] = useState("");
   const { authClient } = useClient();
 
@@ -74,7 +74,7 @@ const NewListing: FC<Props> = (props) => {
     // appending images
     const newImages = images.map((img, index) => ({
       name: "image_" + index,
-      type: mime.getType(img),
+      type: mime.getType(img.url),
       uri: img,
     }));
 
@@ -138,7 +138,7 @@ const NewListing: FC<Props> = (props) => {
           <HorizontalImageList
             images={images}
             onLongPress={(img) => {
-              setSelectedImage(img);
+              setSelectedImage(img.url);
               setShowImageOptions(true);
             }}
           />
@@ -212,7 +212,9 @@ const NewListing: FC<Props> = (props) => {
           }}
           onPress={(option) => {
             if (option.id === "remove") {
-              const newImages = images.filter((img) => img !== selectedImage);
+              const newImages = images.filter(
+                (img) => img.url !== selectedImage
+              );
               setImages([...newImages]);
             }
           }}

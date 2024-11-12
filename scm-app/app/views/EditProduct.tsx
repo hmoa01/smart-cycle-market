@@ -35,7 +35,10 @@ const imageOptions = [
 const EditProduct: FC<Props> = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedImage, setSelectedImage] = useState<{
+    url: string;
+    id: string;
+  }>({ url: "", id: "" });
   const [showImageOptions, setShowImageOptions] = useState(false);
   const { authState } = useAuth();
   const { authClient } = useClient();
@@ -59,14 +62,16 @@ const EditProduct: FC<Props> = () => {
 
   const isAdmin = authState.profile?.id === parsedProduct?.seller.id;
 
-  const onLongPress = (image: string) => {
-    setSelectedImage(image);
+  const onLongPress = (image: { url: string; id: string }) => {
+    setSelectedImage({ url: image.url, id: image.id });
     setShowImageOptions(true);
   };
 
   const removeSelectedImage = async () => {
-    const notLocalImage = selectedImage.startsWith("https://ik.imagekit.io");
-    const imageId = selectedImage;
+    const notLocalImage = selectedImage.url.startsWith(
+      "https://ik.imagekit.io"
+    );
+    const imageId = selectedImage.id;
     // const splitedItems = selectedImage.split("/");
     // const imageId = splitedItems[splitedItems.length - 1].split(".")[0];
     console.log(imageId);
@@ -90,7 +95,7 @@ const EditProduct: FC<Props> = () => {
         <ScrollView>
           <Text style={styles.title}>Images</Text>
           <HorizontalImageList
-            images={parsedProduct.image || []}
+            images={parsedProduct.image || [{ url: "", id: "" }]}
             onLongPress={onLongPress}
           />
           <Pressable style={styles.imageSelector}>
@@ -134,7 +139,6 @@ const EditProduct: FC<Props> = () => {
     </>
   );
 };
-
 const styles = StyleSheet.create({
   header: {
     marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
