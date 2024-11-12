@@ -246,7 +246,7 @@ export const getProductDetail: RequestHandler = async (req, res) => {
       category: product.category,
       description: product.description,
       purchasingDate: product.purchasingDate,
-      images: product.images?.map(({ url }) => url),
+      images: product.images,
       thumbnail: product.thumbnail,
       seller: {
         id: product.owner._id,
@@ -322,7 +322,7 @@ export const getListings: RequestHandler = async (req, res) => {
       thumbnail: p.thumbnail,
       category: p.category,
       price: p.price,
-      image: p.images?.map((i) => i.url),
+      image: p.images,
       date: p.purchasingDate,
       description: p.description,
       seller: {
