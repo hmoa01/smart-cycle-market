@@ -72,10 +72,10 @@ const NewListing: FC<Props> = (props) => {
     }
 
     // appending images
-    const newImages = images.map((img, index) => ({
+    const newImages = images.map(({ url }, index) => ({
       name: "image_" + index,
-      type: mime.getType(img.url),
-      uri: img,
+      type: mime.getType(url),
+      uri: url,
     }));
 
     for (let img of newImages) {
@@ -97,8 +97,6 @@ const NewListing: FC<Props> = (props) => {
       setImages([]);
     }
 
-    console.log(res);
-
     //  formData.append("name", productInfo.name)
     //  formData.append("category", productInfo.category)
   };
@@ -114,7 +112,7 @@ const NewListing: FC<Props> = (props) => {
 
       if (!assets) return;
 
-      const imageUris = assets.map(({ uri }) => uri);
+      const imageUris = assets.map(({ uri }) => ({ url: uri, id: "" }));
       setImages([...images, ...imageUris]);
     } catch (error) {
       showMessage({ message: (error as any).message, type: "danger" });
@@ -213,7 +211,7 @@ const NewListing: FC<Props> = (props) => {
           onPress={(option) => {
             if (option.id === "remove") {
               const newImages = images.filter(
-                (img) => img.url !== selectedImage
+                ({ url }) => url !== selectedImage
               );
               setImages([...newImages]);
             }
