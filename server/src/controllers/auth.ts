@@ -33,7 +33,6 @@ export const createNewUser: RequestHandler = async (req, res) => {
   await AuthVerificationTokenModel.create({ owner: user._id, token });
 
   const link = `${process.env.VERIFICATION_LINK}?id=${user._id}&token=${token}`;
-  console.log(link);
 
   mail.sendVerification(user.email, link);
 
@@ -242,7 +241,6 @@ export const updateProfile: RequestHandler = async (req, res) => {
 };
 
 export const updateAvatar: RequestHandler = async (req, res) => {
-  console.log(req);
   if (!req.files || !req.files.avatar) {
     return sendErrorRes(res, "No file uploaded!", 400);
   }
@@ -284,8 +282,6 @@ export const updateAvatar: RequestHandler = async (req, res) => {
         },
       ],
     });
-
-    console.log(image);
 
     user.avatar = {
       id: image.fileId,

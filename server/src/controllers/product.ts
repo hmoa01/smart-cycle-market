@@ -26,7 +26,6 @@ export const listNewProduct: RequestHandler = async (req, res) => {
     description,
     purchasingDate,
   });
-
   const { images } = req.files;
 
   const isMultipleImages = Array.isArray(images);
@@ -168,7 +167,6 @@ export const updateProduct: RequestHandler = async (req, res) => {
 };
 
 export const deleteProduct: RequestHandler = async (req, res) => {
-  console.log(req.user);
   const productId = req.params.id;
   if (!isValidObjectId(productId)) {
     return sendErrorRes(res, "Invalid product id", 422);
@@ -225,7 +223,6 @@ export const deleteProductImage: RequestHandler = async (req, res) => {
 };
 
 export const getProductDetail: RequestHandler = async (req, res) => {
-  console.log(req.user);
   const { id } = req.params;
   if (!isValidObjectId(id)) {
     return sendErrorRes(res, "Invalid product id", 422);
