@@ -24,8 +24,23 @@ import DatePicker from "../ui/DatePicker";
 import OptionSelector from "../ui/OptionSelector";
 import OptionModal from "../components/OptionModal";
 import { runAxiosAsync } from "../api/runAxiosAsync";
+import { selectImages } from "../utils/helper";
+import CategoryOptions from "../components/CategoryOptions";
+import AppButton from "../ui/AppButton";
+import { newProductSchema, yupValidate } from "../utils/validator";
+import { showMessage } from "react-native-flash-message";
+import mime from "mime";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 interface Props {}
+
+type ProductInfo = {
+  name: string;
+  description: string;
+  category: string;
+  price: string;
+  purchasingDate: Date;
+};
 
 const imageOptions = [
   { value: "Use as Thumbnail", id: "thumb" },
@@ -33,23 +48,15 @@ const imageOptions = [
 ];
 
 const EditProduct: FC<Props> = () => {
-  const [showMenu, setShowMenu] = useState(false);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<{
-    url: string;
-    id: string;
-  }>({ url: "", id: "" });
-  const [showImageOptions, setShowImageOptions] = useState(false);
-  const { authState } = useAuth();
-  const { authClient } = useClient();
-
   // Get the product as a string from params
-  const { product } = useLocalSearchParams();
+  const { product: productFromParams } = useLocalSearchParams();
   //   const { navigate } = useNavigation<NavigationProp<ProfileStackParamList>>();
 
   // Parse the product string into an object of type Product
   const parsedProduct: Product | null =
-    typeof product === "string" ? JSON.parse(product) : null;
+    typeof productFromParams === "string"
+      ? JSON.parse(productFromParams)
+      : null;
 
   // Ensure parsedProduct is not null
   if (!parsedProduct) {
@@ -59,8 +66,22 @@ const EditProduct: FC<Props> = () => {
       </View>
     );
   }
+  const [showMenu, setShowMenu] = useState(false);
+  const [product, setProduct] = useState({
+    ...parsedProduct,
+    price: parsedProduct.price.toString(),
+    date: new Date(parsedProduct.date),
+  });
+  const [selectedImage, setSelectedImage] = useState<{
+    url: string;
+    id: string;
+  }>({ url: "", id: "" });
+  const [showImageOptions, setShowImageOptions] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const { authState } = useAuth();
+  const { authClient } = useClient();
 
-  const isAdmin = authState.profile?.id === parsedProduct?.seller.id;
+  const isAdmin = authState.profile?.id === product?.seller.id;
 
   const onLongPress = (image: { url: string; id: string }) => {
     setSelectedImage({ url: image.url, id: image.id });
@@ -72,14 +93,75 @@ const EditProduct: FC<Props> = () => {
       "https://ik.imagekit.io"
     );
     const imageId = selectedImage.id;
-    // const splitedItems = selectedImage.split("/");
-    // const imageId = splitedItems[splitedItems.length - 1].split(".")[0];
-    console.log(imageId);
+
+    const images = product.image;
+    const newImages = images?.filter(({ url }) => url !== selectedImage.url);
+    setProduct({ ...product, image: newImages });
+
     if (notLocalImage) {
-      const res = await runAxiosAsync<{ message: string }>(
-        authClient.delete(`/product/image/${parsedProduct.id}/${imageId}`)
+      await runAxiosAsync<{ message: string }>(
+        authClient.delete(`/product/image/${product.id}/${imageId}`)
       );
     }
+  };
+
+  const handleOnImageSelect = async () => {
+    const newImages = await selectImages();
+    const oldImages = product.image || [];
+    const images = oldImages.concat(newImages);
+    setProduct({ ...product, image: [...images] });
+  };
+
+  const makeSelectedImageAsThumbnail = () => {
+    if (selectedImage.url.startsWith("https://ik.imagekit.io")) {
+      setProduct({ ...product, thumbnail: selectedImage.url });
+    }
+  };
+
+  const handleSubmit = async () => {
+    const dataToUpdate: ProductInfo = {
+      name: product.name,
+      category: product.category,
+      description: product.description,
+      price: product.price,
+      purchasingDate: product.date,
+    };
+
+    const { error } = await yupValidate(newProductSchema, dataToUpdate);
+    if (error) return showMessage({ message: error, type: "danger" });
+
+    const formData = new FormData();
+
+    if (product.thumbnail) {
+      formData.append("thumbnail", product.thumbnail);
+    }
+
+    type productInfoKeys = keyof typeof dataToUpdate;
+
+    for (let key in dataToUpdate) {
+      const value = dataToUpdate[key as productInfoKeys];
+      if (value instanceof Date) formData.append(key, value.toISOString());
+      else formData.append(key, value);
+    }
+
+    const images: { uri: string; type: string; name: string }[] = [];
+    console.log("LINK");
+    console.log("/product/" + product.id, formData);
+
+    product.image?.forEach((img, index) => {
+      if (!img.url.startsWith("https://ik.imagekit.io")) return;
+      images.push({
+        uri: img.url,
+        name: "image_" + index,
+        type: mime.getType(img.url) || "image/jpg",
+      });
+    });
+    setBusy(true);
+    const res = await runAxiosAsync<{ message: string }>(
+      authClient.patch("/product/" + product.id, formData)
+    );
+    setBusy(false);
+    if (res) showMessage({ message: res.message, type: "success" });
   };
 
   return (
@@ -95,32 +177,40 @@ const EditProduct: FC<Props> = () => {
         <ScrollView>
           <Text style={styles.title}>Images</Text>
           <HorizontalImageList
-            images={parsedProduct.image || [{ url: "", id: "" }]}
+            images={product.image || [{ url: "", id: "" }]}
             onLongPress={onLongPress}
           />
-          <Pressable style={styles.imageSelector}>
+          <Pressable onPress={handleOnImageSelect} style={styles.imageSelector}>
             <FontAwesome5 name="images" size={30} color={colors.primary} />
           </Pressable>
-          <FormInput placeholder="Product name" value={parsedProduct.name} />
           <FormInput
             placeholder="Product name"
-            value={parsedProduct.price.toString()}
+            value={product.name}
+            onChangeText={(name) => setProduct({ ...product, name })}
+          />
+          <FormInput
+            placeholder="Product name"
+            value={product.price.toString()}
+            onChangeText={(price) => setProduct({ ...product, price })}
           />
           <DatePicker
             title="Purchasing Date: "
-            value={new Date(parsedProduct.date)}
-            onChange={(date) => {
-              console.log(date);
-            }}
+            value={product.date}
+            onChange={(date) => setProduct({ ...product, date })}
           />
-          <OptionSelector
-            title={parsedProduct.category || "Category"}
-            onPress={() => setShowCategoryModal(true)}
+          <CategoryOptions
+            title={product.category || "Category"}
+            onSelect={(category) => setProduct({ ...product, category })}
           />
+
           <FormInput
             placeholder="Description"
-            value={parsedProduct.description}
+            value={product.description}
+            onChangeText={(description) =>
+              setProduct({ ...product, description })
+            }
           />
+          <AppButton title="Update Product" onPress={handleSubmit} />
         </ScrollView>
       </View>
       <OptionModal
@@ -131,11 +221,11 @@ const EditProduct: FC<Props> = () => {
           return <Text style={styles.option}>{option.value}</Text>;
         }}
         onPress={({ id }) => {
-          if (id === "thumb") {
-          }
+          if (id === "thumb") makeSelectedImageAsThumbnail;
           if (id === "remove") removeSelectedImage();
         }}
       />
+      <LoadingSpinner visible={busy} />
     </>
   );
 };

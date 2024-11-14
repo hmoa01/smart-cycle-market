@@ -26,6 +26,8 @@ import useClient from "app/hooks/useClient";
 import { runAxiosAsync } from "app/api/runAxiosAsync";
 import LoadingSpinner from "@ui/LoadingSpinner";
 import OptionSelector from "../ui/OptionSelector";
+import { selectImages } from "../utils/helper";
+import CategoryOptions from "../components/CategoryOptions";
 
 interface Props {}
 
@@ -42,7 +44,6 @@ const imageOptions = [{ value: "Remove Image", id: "remove" }];
 const NewListing: FC<Props> = (props) => {
   const [productInfo, setProductInfo] = useState({ ...defaultInfo });
   const [busy, setBusy] = useState(false);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showImageOptions, setShowImageOptions] = useState(false);
   const [images, setImages] = useState<{ url: string; id?: string }[]>([]);
   const [selectedImage, setSelectedImage] = useState("");
@@ -102,21 +103,8 @@ const NewListing: FC<Props> = (props) => {
   };
 
   const handleOnImageSelection = async () => {
-    try {
-      const { assets } = await ImagePicker.launchImageLibraryAsync({
-        allowsEditing: false,
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.3,
-        allowsMultipleSelection: true,
-      });
-
-      if (!assets) return;
-
-      const imageUris = assets.map(({ uri }) => ({ url: uri, id: "" }));
-      setImages([...images, ...imageUris]);
-    } catch (error) {
-      showMessage({ message: (error as any).message, type: "danger" });
-    }
+    const newImages = await selectImages();
+    setImages([...images, ...newImages]);
   };
 
   return (
@@ -173,9 +161,9 @@ const NewListing: FC<Props> = (props) => {
           }
         />
 
-        <OptionSelector
+        <CategoryOptions
           title={category || "Category"}
-          onPress={() => setShowCategoryModal(true)}
+          onSelect={handleChange("category")}
         />
 
         <FormInput
@@ -187,18 +175,6 @@ const NewListing: FC<Props> = (props) => {
         />
 
         <AppButton title="List Product" onPress={handleSubmit} />
-
-        <OptionModal
-          visible={showCategoryModal}
-          onRequestClose={setShowCategoryModal}
-          options={categories}
-          renderItem={(item) => {
-            return <CategoryOption {...item} />;
-          }}
-          onPress={(item) =>
-            setProductInfo({ ...productInfo, category: item.name })
-          }
-        />
 
         {/* Image Options */}
         <OptionModal
