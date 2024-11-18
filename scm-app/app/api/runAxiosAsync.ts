@@ -21,7 +21,6 @@ export const runAxiosAsync = async <T>(
     let message = (error as any).message;
     if (error instanceof AxiosError) {
       const response = error.response;
-
       if (response) {
         message = response.data.message;
       }

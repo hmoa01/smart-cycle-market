@@ -21,7 +21,6 @@ const HorizontalImageList: FC<Props> = ({
   onPress,
   onLongPress,
 }) => {
-  console.log(images);
   return (
     <FlatList
       data={images}

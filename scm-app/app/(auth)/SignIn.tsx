@@ -11,6 +11,7 @@ import { View, StyleSheet } from "react-native";
 import { showMessage } from "react-native-flash-message";
 import { signInSchema, yupValidate } from "../utils/validator";
 import useAuth from "../hooks/useAuth";
+import { AuthStackParamList } from "../types/StackProps";
 
 interface Props {}
 

@@ -21,7 +21,6 @@ import HorizontalImageList from "../components/HorizontalImageList";
 import { FontAwesome5 } from "@expo/vector-icons";
 import FormInput from "../ui/FormInput";
 import DatePicker from "../ui/DatePicker";
-import OptionSelector from "../ui/OptionSelector";
 import OptionModal from "../components/OptionModal";
 import { runAxiosAsync } from "../api/runAxiosAsync";
 import { selectImages } from "../utils/helper";
@@ -118,7 +117,55 @@ const EditProduct: FC<Props> = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  // const handleSubmit = async () => {
+  //   const dataToUpdate: ProductInfo = {
+  //     name: product.name,
+  //     category: product.category,
+  //     description: product.description,
+  //     price: product.price,
+  //     purchasingDate: product.date,
+  //   };
+
+  //   const { error } = await yupValidate(newProductSchema, dataToUpdate);
+
+  //   if (error) return showMessage({ message: error, type: "danger" });
+
+  //   const formData = new FormData();
+
+  //   if (product.thumbnail) {
+  //     formData.append("thumbnail", product.thumbnail);
+  //   }
+
+  //   type productInfoKeys = keyof typeof dataToUpdate;
+  //   for (let key in dataToUpdate) {
+  //     const value = dataToUpdate[key as productInfoKeys];
+  //     if (value instanceof Date) formData.append(key, value.toISOString());
+  //     else formData.append(key, value);
+  //   }
+
+  //   product.image?.forEach((img, index) => {
+  //     if (!img.url.startsWith("https://ik.imagekit.io"))
+  //       formData.append("images", {
+  //         uri: img.url,
+  //         name: "image_" + index,
+  //         type: mime.getType(img.url) || "image/jpg",
+  //       } as any);
+  //   });
+
+  //   console.log(dataToUpdate);
+
+  //   setBusy(true);
+  //   const res = await runAxiosAsync<{ message: string }>(
+  //     authClient.patch(
+  //       "http://192.168.0.10:8000/product/" + product.id,
+  //       formData
+  //     )
+  //   );
+  //   setBusy(false);
+  //   if (res) showMessage({ message: res.message, type: "success" });
+  // };
+
+  const handleOnSubmit = async () => {
     const dataToUpdate: ProductInfo = {
       name: product.name,
       category: product.category,
@@ -141,27 +188,36 @@ const EditProduct: FC<Props> = () => {
     for (let key in dataToUpdate) {
       const value = dataToUpdate[key as productInfoKeys];
       if (value instanceof Date) formData.append(key, value.toISOString());
-      else formData.append(key, value);
+      else if (value !== undefined && value !== null) {
+        formData.append(key, value);
+      }
     }
-
-    const images: { uri: string; type: string; name: string }[] = [];
-    console.log("LINK");
-    console.log("/product/" + product.id, formData);
-
-    product.image?.forEach((img, index) => {
-      if (!img.url.startsWith("https://ik.imagekit.io")) return;
-      images.push({
-        uri: img.url,
-        name: "image_" + index,
-        type: mime.getType(img.url) || "image/jpg",
-      });
+    console.log(product.image);
+    product.image?.forEach(({ url }, index) => {
+      if (!url.startsWith("https://ik.imagekit.io")) {
+        const imageData = {
+          uri: url,
+          name: `image_${index}`,
+          type: mime.getType(url) || "image/jpg",
+        };
+        formData.append("images", imageData as any);
+      }
     });
+
+    // send our new data to api
     setBusy(true);
     const res = await runAxiosAsync<{ message: string }>(
-      authClient.patch("/product/" + product.id, formData)
+      authClient.patch(`/product/${product.id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
     );
+
     setBusy(false);
-    if (res) showMessage({ message: res.message, type: "success" });
+    if (res) {
+      showMessage({ message: res.message, type: "success" });
+    }
   };
 
   return (
@@ -210,7 +266,7 @@ const EditProduct: FC<Props> = () => {
               setProduct({ ...product, description })
             }
           />
-          <AppButton title="Update Product" onPress={handleSubmit} />
+          <AppButton title="Update Product" onPress={handleOnSubmit} />
         </ScrollView>
       </View>
       <OptionModal
