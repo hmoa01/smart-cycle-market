@@ -86,10 +86,12 @@ export const listNewProduct: RequestHandler = async (req, res) => {
 export const updateProduct: RequestHandler = async (req, res) => {
   const { name, price, category, description, purchasingDate, thumbnail } =
     req.body;
-
+  console.log("USLO", req.body);
   const { id } = req.params;
-  if (!isValidObjectId(id))
+  if (!isValidObjectId(id)) {
+    console.log("id", id);
     return sendErrorRes(res, "Invalid product id!", 422);
+  }
 
   const product = await ProductModel.findOneAndUpdate(
     { _id: id, owner: req.user.id },
@@ -161,8 +163,7 @@ export const updateProduct: RequestHandler = async (req, res) => {
   await product.save();
 
   res.status(201).json({
-    message: "Product created successfully!",
-    product: product,
+    message: "Product updated successfully!",
   });
 };
 
