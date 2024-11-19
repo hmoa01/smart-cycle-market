@@ -13,7 +13,7 @@ import { NavigationProp } from "@react-navigation/native";
 import asyncStorage, { Keys } from "./utils/asyncStorage";
 import useClient from "./hooks/useClient";
 
-type ProfileRes = {
+export type ProfileRes = {
   profile: {
     id: string;
     name: string;

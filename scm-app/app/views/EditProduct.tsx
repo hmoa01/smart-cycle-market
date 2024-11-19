@@ -30,6 +30,7 @@ import { newProductSchema, yupValidate } from "../utils/validator";
 import { showMessage } from "react-native-flash-message";
 import mime from "mime";
 import LoadingSpinner from "../ui/LoadingSpinner";
+import deepEqual from "deep-equal";
 
 interface Props {}
 
@@ -65,15 +66,18 @@ const EditProduct: FC<Props> = () => {
       </View>
     );
   }
-  const [showMenu, setShowMenu] = useState(false);
-  const [product, setProduct] = useState({
+
+  const productInfoToUpdate = {
     ...parsedProduct,
     price: parsedProduct.price.toString(),
     date: new Date(parsedProduct.date),
-  });
+  };
+
+  const [showMenu, setShowMenu] = useState(false);
+  const [product, setProduct] = useState({ ...productInfoToUpdate });
   const [selectedImage, setSelectedImage] = useState<{
     url: string;
-    id: string;
+    id?: string;
   }>({ url: "", id: "" });
   const [showImageOptions, setShowImageOptions] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -82,8 +86,11 @@ const EditProduct: FC<Props> = () => {
 
   const isAdmin = authState.profile?.id === product?.seller.id;
 
+  const isFormChanged = deepEqual(productInfoToUpdate, product);
+
   const onLongPress = (image: { url: string; id: string }) => {
     setSelectedImage({ url: image.url, id: image.id });
+
     setShowImageOptions(true);
   };
 
@@ -114,56 +121,9 @@ const EditProduct: FC<Props> = () => {
   const makeSelectedImageAsThumbnail = () => {
     if (selectedImage.url.startsWith("https://ik.imagekit.io")) {
       setProduct({ ...product, thumbnail: selectedImage.url });
+      console.log("odabrani thumbanil");
     }
   };
-
-  // const handleSubmit = async () => {
-  //   const dataToUpdate: ProductInfo = {
-  //     name: product.name,
-  //     category: product.category,
-  //     description: product.description,
-  //     price: product.price,
-  //     purchasingDate: product.date,
-  //   };
-
-  //   const { error } = await yupValidate(newProductSchema, dataToUpdate);
-
-  //   if (error) return showMessage({ message: error, type: "danger" });
-
-  //   const formData = new FormData();
-
-  //   if (product.thumbnail) {
-  //     formData.append("thumbnail", product.thumbnail);
-  //   }
-
-  //   type productInfoKeys = keyof typeof dataToUpdate;
-  //   for (let key in dataToUpdate) {
-  //     const value = dataToUpdate[key as productInfoKeys];
-  //     if (value instanceof Date) formData.append(key, value.toISOString());
-  //     else formData.append(key, value);
-  //   }
-
-  //   product.image?.forEach((img, index) => {
-  //     if (!img.url.startsWith("https://ik.imagekit.io"))
-  //       formData.append("images", {
-  //         uri: img.url,
-  //         name: "image_" + index,
-  //         type: mime.getType(img.url) || "image/jpg",
-  //       } as any);
-  //   });
-
-  //   console.log(dataToUpdate);
-
-  //   setBusy(true);
-  //   const res = await runAxiosAsync<{ message: string }>(
-  //     authClient.patch(
-  //       "http://192.168.0.10:8000/product/" + product.id,
-  //       formData
-  //     )
-  //   );
-  //   setBusy(false);
-  //   if (res) showMessage({ message: res.message, type: "success" });
-  // };
 
   const handleOnSubmit = async () => {
     const dataToUpdate: ProductInfo = {
@@ -192,7 +152,6 @@ const EditProduct: FC<Props> = () => {
         formData.append(key, value);
       }
     }
-    console.log(product.image);
     product.image?.forEach(({ url }, index) => {
       if (!url.startsWith("https://ik.imagekit.io")) {
         const imageData = {
@@ -266,7 +225,9 @@ const EditProduct: FC<Props> = () => {
               setProduct({ ...product, description })
             }
           />
-          <AppButton title="Update Product" onPress={handleOnSubmit} />
+          {!isFormChanged && (
+            <AppButton title="Update Product" onPress={handleOnSubmit} />
+          )}
         </ScrollView>
       </View>
       <OptionModal
@@ -277,7 +238,7 @@ const EditProduct: FC<Props> = () => {
           return <Text style={styles.option}>{option.value}</Text>;
         }}
         onPress={({ id }) => {
-          if (id === "thumb") makeSelectedImageAsThumbnail;
+          if (id === "thumb") makeSelectedImageAsThumbnail();
           if (id === "remove") removeSelectedImage();
         }}
       />
