@@ -6,7 +6,7 @@ export type Profile = {
   name: string;
   email: string;
   verified: boolean;
-  avatar?: string;
+  avatar?: { id: string; url: string };
   accessToken: string;
 };
 

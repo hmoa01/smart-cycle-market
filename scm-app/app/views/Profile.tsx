@@ -64,6 +64,7 @@ const Profile: FC<Props> = (props) => {
       allowsEditing: true,
       aspect: [1, 1],
     });
+
     if (image) {
       const formData = new FormData();
       formData.append("avatar", {
@@ -118,13 +119,13 @@ const Profile: FC<Props> = (props) => {
     if (res) {
       dispatch(
         updateAuthState({
-          profile: { ...profile!, ...res.profile },
+          profile: { ...res.profile, ...profile! },
           pending: false,
         })
       );
     }
   };
-
+  console.log(profile);
   return (
     <GestureHandlerRootView style={styles.container}>
       <ScrollView
@@ -151,7 +152,7 @@ const Profile: FC<Props> = (props) => {
         ) : null}
         <View style={styles.profileContainer}>
           <AvatarView
-            uri={profile?.avatar}
+            uri={profile?.avatar?.url}
             size={80}
             onPress={handleProfileImageSelection}
           />

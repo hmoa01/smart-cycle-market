@@ -14,7 +14,7 @@ export interface SignInRes {
     email: string;
     name: string;
     verified: boolean;
-    avatar?: string;
+    avatar?: { id: string; url: string };
   };
   tokens: {
     refresh: string;

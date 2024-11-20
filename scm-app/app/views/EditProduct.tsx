@@ -155,7 +155,7 @@ const EditProduct: FC<Props> = () => {
     product.image?.forEach(({ url }, index) => {
       if (!url.startsWith("https://ik.imagekit.io")) {
         const imageData = {
-          uri: url,
+          url: url,
           name: `image_${index}`,
           type: mime.getType(url) || "image/jpg",
         };

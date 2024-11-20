@@ -14,4 +14,5 @@ export type ProfileStackParamList = {
   "views/SingleProduct": { product?: Product };
   "views/EditProduct": { product?: Product };
   "views/ChatWindow": undefined;
+  "views/ProductList": undefined;
 };
