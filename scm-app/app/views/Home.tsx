@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { View, StyleSheet, Text, ScrollView } from "react-native";
 import ChatNotification from "../ui/ChatNotification";
 import size from "../utils/size";
@@ -7,7 +7,11 @@ import { NavigationProp } from "@react-navigation/native";
 import { ProfileStackParamList } from "../types/StackProps";
 import SearchBar from "../components/SearchBar";
 import CategoryList from "../components/CategoryList";
-import LatestProductList from "../components/LatestProductList";
+import LatestProductList, {
+  LatestProduct,
+} from "../components/LatestProductList";
+import { runAxiosAsync } from "../api/runAxiosAsync";
+import useClient from "../hooks/useClient";
 
 interface Props {}
 
@@ -55,14 +59,34 @@ const testData = [
 ];
 
 const Home: FC<Props> = (props) => {
+  const [products, setProducts] = useState<LatestProduct[]>([]);
   const { navigate } = useNavigation<NavigationProp<ProfileStackParamList>>();
+  const { authClient } = useClient();
+
+  const fetchLatestProduct = async () => {
+    const res = await runAxiosAsync<{ products: LatestProduct[] }>(
+      authClient.get("/product/latest")
+    );
+
+    if (res?.products) {
+      setProducts(res.products);
+    }
+  };
+
+  useEffect(() => {
+    fetchLatestProduct();
+  }, []);
+
   return (
     <>
       <ChatNotification onPress={() => navigate("views/Chats")} />
       <ScrollView style={styles.container}>
         <SearchBar />
         <CategoryList onPress={() => navigate("views/ProductList")} />
-        <LatestProductList data={testData} />
+        <LatestProductList
+          onPress={({ id }) => navigate("views/SingleProduct", { id: id })}
+          data={products}
+        />
       </ScrollView>
     </>
   );

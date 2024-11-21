@@ -1,32 +1,73 @@
 import React, { FC } from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet, Text, Pressable, Image } from "react-native";
 import { LatestProduct } from "./LatestProductList";
+import GridView from "../ui/GridView";
+import { formatPrice } from "../utils/helper";
+import colors from "../utils/colors";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 interface Props {
   data: LatestProduct[];
+  onPress(item: LatestProduct): void;
 }
 
-const column = 2;
-
-const ProductGridView: FC<Props> = ({ data }) => {
+const ProductGridView: FC<Props> = ({ data, onPress }) => {
   return (
-    <View style={styles.container}>
-      {data.map((product) => {
+    <GridView
+      data={data}
+      renderItem={(item) => {
         return (
-          <View style={{ width: `${100 / column}%` }} key={product.id}>
-            <Text>{product.name}</Text>
-          </View>
+          <Pressable
+            onPress={() => onPress(item)}
+            style={styles.productContainer}
+          >
+            {item.thumbnail ? (
+              <Image
+                source={{ uri: item.thumbnail }}
+                style={styles.thumbnail}
+              />
+            ) : (
+              <View style={[styles.thumbnail, styles.noImageView]}>
+                <MaterialCommunityIcons
+                  name="image-off"
+                  size={35}
+                  color={colors.primary}
+                />
+              </View>
+            )}
+            <Text style={styles.price}>{formatPrice(item.price)}</Text>
+            <Text style={styles.name}>{item.name}</Text>
+          </Pressable>
         );
-      })}
-    </View>
+      }}
+    ></GridView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
+  productContainer: {
+    padding: 7,
+  },
+  thumbnail: {
     width: "100%",
-    flexWrap: "wrap",
+    height: 100,
+    borderRadius: 5,
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.active,
+    paddingTop: 5,
+  },
+  name: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.primary,
+  },
+  noImageView: {
+    backgroundColor: colors.deActive,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

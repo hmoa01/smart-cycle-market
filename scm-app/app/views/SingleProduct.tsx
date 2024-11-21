@@ -1,4 +1,4 @@
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -14,7 +14,7 @@ import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import ProductDetail from "../components/ProductDetail";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import useAuth from "../hooks/useAuth";
-import { AntDesign, Feather, Ionicons } from "@expo/vector-icons";
+import { AntDesign, Feather } from "@expo/vector-icons";
 import colors from "../utils/colors";
 import OptionButton from "../ui/OptionButton";
 import OptionModal from "../components/OptionModal";
@@ -43,13 +43,14 @@ const menuOptions = [
 const SingleProduct: FC<Props> = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [productInfo, setProductInfo] = useState<Product>();
   const { authState } = useAuth();
   const { authClient } = useClient();
   const router = useRouter();
   const dispatch = useDispatch();
 
   // Get the product as a string from params
-  const { product } = useLocalSearchParams();
+  const { product, id } = useLocalSearchParams();
   const { navigate } = useNavigation<NavigationProp<ProfileStackParamList>>();
 
   // Parse the product string into an object of type Product
@@ -57,13 +58,13 @@ const SingleProduct: FC<Props> = () => {
     typeof product === "string" ? JSON.parse(product) : null;
 
   // Ensure parsedProduct is not null
-  if (!parsedProduct) {
-    return (
-      <View>
-        <Text>No product found</Text>
-      </View>
-    );
-  }
+  // if (!parsedProduct) {
+  //   return (
+  //     <View>
+  //       <Text>No product found</Text>
+  //     </View>
+  //   );
+  // }
 
   const isAdmin = authState.profile?.id === parsedProduct?.seller.id;
 
@@ -96,6 +97,21 @@ const SingleProduct: FC<Props> = () => {
     );
   };
 
+  const fetchProductInfo = async (id: string) => {
+    const res = await runAxiosAsync<{ product: Product }>(
+      authClient.get("/product/detail/" + id)
+    );
+    if (res) {
+      setProductInfo(res.product);
+    }
+  };
+
+  useEffect(() => {
+    if (id) fetchProductInfo(id as string);
+
+    if (parsedProduct) setProductInfo(parsedProduct);
+  }, [id, product]);
+
   return (
     <>
       <AppHeader
@@ -106,7 +122,7 @@ const SingleProduct: FC<Props> = () => {
         }
       />
       <GestureHandlerRootView style={{ flex: 1 }}>
-        {parsedProduct ? <ProductDetail product={parsedProduct} /> : <></>}
+        {productInfo ? <ProductDetail product={productInfo} /> : <></>}
         <Pressable
           onPress={() => navigate("views/ChatWindow")}
           style={styles.messageBtn}

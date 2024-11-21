@@ -28,7 +28,7 @@ const ProductDetail: FC<Props> = ({ product }) => {
         <Text style={styles.description}>{product.description}</Text>
 
         <View style={styles.profileContainer}>
-          <AvatarView uri={product.seller.avatar} size={60} />
+          <AvatarView uri={product.seller.avatar?.url as string} size={60} />
           <Text style={styles.profileName}>{product.seller.name}</Text>
         </View>
       </ScrollView>

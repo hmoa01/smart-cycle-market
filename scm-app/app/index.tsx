@@ -8,7 +8,6 @@ import { updateAuthState } from "./store/auth";
 import { runAxiosAsync } from "./api/runAxiosAsync";
 import LoadingSpinner from "./ui/LoadingSpinner";
 import SignIn from "./(auth)/SignIn";
-import { NavigationProp } from "@react-navigation/native";
 
 import asyncStorage, { Keys } from "./utils/asyncStorage";
 import useClient from "./hooks/useClient";

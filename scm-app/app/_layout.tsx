@@ -14,7 +14,6 @@ import FlashMessage from "react-native-flash-message";
 import { StatusBar } from "react-native";
 import { Provider } from "react-redux";
 import store from "./store";
-import useAuth from "./hooks/useAuth";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -109,6 +108,7 @@ function RootLayoutContent() {
             headerShown: false,
           }}
         />
+
         <Stack.Screen name="+not-found" />
       </Stack>
     </ThemeProvider>
