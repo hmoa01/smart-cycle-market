@@ -162,7 +162,7 @@ const EditProduct: FC<Props> = () => {
         formData.append("images", imageData as any);
       }
     });
-
+    console.log(product);
     // send our new data to api
     setBusy(true);
     const res = await runAxiosAsync<{ message: string }>(

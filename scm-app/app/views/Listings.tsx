@@ -58,13 +58,21 @@ const Listings: FC<Props> = (props) => {
           contentContainerStyle={styles.flatList}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => {
+            console.log(item);
             return (
               <Pressable
                 style={styles.listItem}
                 onPress={() => {
+                  const validDate =
+                    item?.date && !isNaN(Date.parse(item.date))
+                      ? new Date(item.date).toISOString()
+                      : null;
+
                   router.push({
                     pathname: "views/SingleProduct",
-                    params: { product: JSON.stringify(item) },
+                    params: {
+                      product: JSON.stringify({ ...item, date: validDate }),
+                    },
                   });
                 }}
               >

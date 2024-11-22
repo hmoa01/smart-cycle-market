@@ -26,6 +26,7 @@ import { ProfileStackParamList } from "../types/StackProps";
 import { NavigationProp } from "@react-navigation/native";
 import { deleteItem, Product } from "../store/listings";
 import { useDispatch } from "react-redux";
+import { date } from "yup";
 
 interface Props {}
 
@@ -66,7 +67,7 @@ const SingleProduct: FC<Props> = () => {
   //   );
   // }
 
-  const isAdmin = authState.profile?.id === parsedProduct?.seller.id;
+  const isAdmin = authState.profile?.id === productInfo?.seller.id;
 
   const confirmDelete = async () => {
     const id = parsedProduct?.id;
@@ -145,9 +146,16 @@ const SingleProduct: FC<Props> = () => {
             onDeletePress();
           }
           if (option.name === "Edit") {
+            const validDate =
+              productInfo?.date && !isNaN(Date.parse(productInfo.date))
+                ? new Date(productInfo.date).toISOString()
+                : null;
+
             router.push({
               pathname: "views/EditProduct",
-              params: { product: JSON.stringify(parsedProduct) },
+              params: {
+                product: JSON.stringify({ ...productInfo, date: validDate }),
+              },
             });
           }
         }}
