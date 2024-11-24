@@ -7,8 +7,8 @@ export type Product = {
   thumbnail?: string;
   category: string;
   price: number;
-  image?: { url: string; id: string }[];
-  date: string;
+  images?: { url: string; id: string }[];
+  purchasingDate: string;
   description: string;
   seller: {
     id: string;

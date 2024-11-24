@@ -125,7 +125,6 @@ const Profile: FC<Props> = (props) => {
       );
     }
   };
-  console.log(profile);
   return (
     <GestureHandlerRootView style={styles.container}>
       <ScrollView

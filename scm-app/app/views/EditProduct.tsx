@@ -70,7 +70,7 @@ const EditProduct: FC<Props> = () => {
   const productInfoToUpdate = {
     ...parsedProduct,
     price: parsedProduct.price.toString(),
-    date: new Date(parsedProduct.date),
+    date: new Date(parsedProduct.purchasingDate),
   };
 
   const [showMenu, setShowMenu] = useState(false);
@@ -100,9 +100,9 @@ const EditProduct: FC<Props> = () => {
     );
     const imageId = selectedImage.id;
 
-    const images = product.image;
+    const images = product.images;
     const newImages = images?.filter(({ url }) => url !== selectedImage.url);
-    setProduct({ ...product, image: newImages });
+    setProduct({ ...product, images: newImages });
 
     if (notLocalImage) {
       await runAxiosAsync<{ message: string }>(
@@ -113,15 +113,14 @@ const EditProduct: FC<Props> = () => {
 
   const handleOnImageSelect = async () => {
     const newImages = await selectImages();
-    const oldImages = product.image || [];
+    const oldImages = product.images || [];
     const images = oldImages.concat(newImages);
-    setProduct({ ...product, image: [...images] });
+    setProduct({ ...product, images: [...images] });
   };
 
   const makeSelectedImageAsThumbnail = () => {
     if (selectedImage.url.startsWith("https://ik.imagekit.io")) {
       setProduct({ ...product, thumbnail: selectedImage.url });
-      console.log("odabrani thumbanil");
     }
   };
 
@@ -149,20 +148,22 @@ const EditProduct: FC<Props> = () => {
       const value = dataToUpdate[key as productInfoKeys];
       if (value instanceof Date) formData.append(key, value.toISOString());
       else if (value !== undefined && value !== null) {
-        formData.append(key, value);
+        formData.append(key, value.toString());
       }
     }
-    product.image?.forEach(({ url }, index) => {
+
+    product.images?.forEach(({ url }, index) => {
       if (!url.startsWith("https://ik.imagekit.io")) {
         const imageData = {
-          url: url,
+          uri: url,
           name: `image_${index}`,
           type: mime.getType(url) || "image/jpg",
         };
+
         formData.append("images", imageData as any);
       }
     });
-    console.log(product);
+
     // send our new data to api
     setBusy(true);
     const res = await runAxiosAsync<{ message: string }>(
@@ -178,6 +179,7 @@ const EditProduct: FC<Props> = () => {
       showMessage({ message: res.message, type: "success" });
     }
   };
+  // console.log(JSON.stringify(product, null, 2));
 
   return (
     <>
@@ -192,7 +194,7 @@ const EditProduct: FC<Props> = () => {
         <ScrollView>
           <Text style={styles.title}>Images</Text>
           <HorizontalImageList
-            images={product.image || [{ url: "", id: "" }]}
+            images={product.images || [{ url: "", id: "" }]}
             onLongPress={onLongPress}
           />
           <Pressable onPress={handleOnImageSelect} style={styles.imageSelector}>

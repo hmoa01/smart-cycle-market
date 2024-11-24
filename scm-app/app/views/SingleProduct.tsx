@@ -51,7 +51,7 @@ const SingleProduct: FC<Props> = () => {
   const dispatch = useDispatch();
 
   // Get the product as a string from params
-  const { product, id } = useLocalSearchParams();
+  const { product, productId } = useLocalSearchParams();
   const { navigate } = useNavigation<NavigationProp<ProfileStackParamList>>();
 
   // Parse the product string into an object of type Product
@@ -108,10 +108,10 @@ const SingleProduct: FC<Props> = () => {
   };
 
   useEffect(() => {
-    if (id) fetchProductInfo(id as string);
+    if (productId) fetchProductInfo(productId as string);
 
     if (parsedProduct) setProductInfo(parsedProduct);
-  }, [id, product]);
+  }, [productId, product]);
 
   return (
     <>
@@ -146,11 +146,14 @@ const SingleProduct: FC<Props> = () => {
             onDeletePress();
           }
           if (option.name === "Edit") {
+            // let validDate = null;
+            // if (productId) {
             const validDate =
-              productInfo?.date && !isNaN(Date.parse(productInfo.date))
-                ? new Date(productInfo.date).toISOString()
+              productInfo?.purchasingDate &&
+              !isNaN(Date.parse(productInfo.purchasingDate))
+                ? new Date(productInfo.purchasingDate).toISOString()
                 : null;
-
+            // } else
             router.push({
               pathname: "views/EditProduct",
               params: {

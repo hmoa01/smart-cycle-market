@@ -17,12 +17,12 @@ const ProductDetail: FC<Props> = ({ product }) => {
   return (
     <View style={styles.container}>
       <ScrollView>
-        <ImageSlider images={product.image} />
+        <ImageSlider images={product.images} />
 
         <Text style={styles.category}>{product.category}</Text>
         <Text style={styles.price}>{formatPrice(product.price)}</Text>
         <Text style={styles.date}>
-          Purchased on: {formatDate(product.date, "dd LLL yyyy")}
+          Purchased on: {formatDate(product.purchasingDate, "dd LLL yyyy")}
         </Text>
         <Text style={styles.name}>{product.name}</Text>
         <Text style={styles.description}>{product.description}</Text>

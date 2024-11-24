@@ -86,7 +86,9 @@ const Home: FC<Props> = (props) => {
           onPress={(category) => navigate("views/ProductList", { category })}
         />
         <LatestProductList
-          onPress={({ id }) => navigate("views/SingleProduct", { id: id })}
+          onPress={({ id }) =>
+            navigate("views/SingleProduct", { productId: id })
+          }
           data={products}
         />
       </ScrollView>

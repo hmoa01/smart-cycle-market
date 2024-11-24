@@ -23,7 +23,7 @@ interface Props {}
 
 type ListingResponse = { products: Product[] };
 
-const Listings: FC<Props> = (props) => {
+const Listings: FC<Props> = () => {
   const router = useRouter();
   // const [listings, setListings] = useState<Product[]>([]);
   const [fetching, setFetching] = useState(false);
@@ -58,14 +58,14 @@ const Listings: FC<Props> = (props) => {
           contentContainerStyle={styles.flatList}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => {
-            console.log(item);
             return (
               <Pressable
                 style={styles.listItem}
                 onPress={() => {
                   const validDate =
-                    item?.date && !isNaN(Date.parse(item.date))
-                      ? new Date(item.date).toISOString()
+                    item?.purchasingDate &&
+                    !isNaN(Date.parse(item.purchasingDate))
+                      ? new Date(item.purchasingDate).toISOString()
                       : null;
 
                   router.push({
