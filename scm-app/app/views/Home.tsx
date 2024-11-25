@@ -12,6 +12,7 @@ import LatestProductList, {
 } from "../components/LatestProductList";
 import { runAxiosAsync } from "../api/runAxiosAsync";
 import useClient from "../hooks/useClient";
+import socket from "../socket";
 
 interface Props {}
 
@@ -75,6 +76,14 @@ const Home: FC<Props> = (props) => {
 
   useEffect(() => {
     fetchLatestProduct();
+  }, []);
+
+  useEffect(() => {
+    socket.connect();
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   return (
