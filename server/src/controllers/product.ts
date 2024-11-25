@@ -86,10 +86,8 @@ export const listNewProduct: RequestHandler = async (req, res) => {
 export const updateProduct: RequestHandler = async (req, res) => {
   const { name, price, category, description, purchasingDate, thumbnail } =
     req.body;
-  console.log("USLO", req.body);
   const { id } = req.params;
   if (!isValidObjectId(id)) {
-    console.log("id", id);
     return sendErrorRes(res, "Invalid product id!", 422);
   }
 
@@ -320,8 +318,8 @@ export const getListings: RequestHandler = async (req, res) => {
       thumbnail: p.thumbnail,
       category: p.category,
       price: p.price,
-      image: p.images,
-      date: p.purchasingDate,
+      images: p.images,
+      purchasingDate: p.purchasingDate,
       description: p.description,
       seller: {
         id: req.user.id,
