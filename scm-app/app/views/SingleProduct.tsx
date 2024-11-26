@@ -26,7 +26,7 @@ import { ProfileStackParamList } from "../types/StackProps";
 import { NavigationProp } from "@react-navigation/native";
 import { deleteItem, Product } from "../store/listings";
 import { useDispatch } from "react-redux";
-import { date } from "yup";
+import ChatIcon from "../components/ChatIcon";
 
 interface Props {}
 
@@ -44,6 +44,7 @@ const menuOptions = [
 const SingleProduct: FC<Props> = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [fetchingChatId, setFetchingChatId] = useState(false);
   const [productInfo, setProductInfo] = useState<Product>();
   const { authState } = useAuth();
   const { authClient } = useClient();
@@ -107,6 +108,25 @@ const SingleProduct: FC<Props> = () => {
     }
   };
 
+  const onChatBtnPress = async () => {
+    if (!productInfo) return;
+
+    setFetchingChatId(true);
+    const res = await runAxiosAsync<{ conversationId: string }>(
+      authClient.get("/conversation/with/" + productInfo?.seller.id)
+    );
+    setFetchingChatId(false);
+    if (res) {
+      router.push({
+        pathname: "views/ChatWindow",
+        params: {
+          conversationId: JSON.stringify(res.conversationId),
+          peerProfile: JSON.stringify(productInfo.seller),
+        },
+      });
+    }
+  };
+
   useEffect(() => {
     if (productId) fetchProductInfo(productId as string);
 
@@ -124,12 +144,9 @@ const SingleProduct: FC<Props> = () => {
       />
       <GestureHandlerRootView style={{ flex: 1 }}>
         {productInfo ? <ProductDetail product={productInfo} /> : <></>}
-        <Pressable
-          onPress={() => navigate("views/ChatWindow")}
-          style={styles.messageBtn}
-        >
-          <AntDesign name="message1" size={20} color="white" />
-        </Pressable>
+        {!isAdmin && (
+          <ChatIcon onPress={onChatBtnPress} busy={fetchingChatId} />
+        )}
       </GestureHandlerRootView>
       <OptionModal
         options={menuOptions}
@@ -180,17 +197,6 @@ const styles = StyleSheet.create({
   optionTitle: {
     paddingLeft: 5,
     color: colors.primary,
-  },
-  messageBtn: {
-    width: 50,
-    height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 25,
-    backgroundColor: colors.active,
-    position: "absolute",
-    bottom: 20,
-    right: 20,
   },
 });
 

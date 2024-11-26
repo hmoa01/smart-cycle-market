@@ -13,7 +13,7 @@ export type Product = {
   seller: {
     id: string;
     name: string;
-    avatar?: { id: string; url: String };
+    avatar?: { id: string; url: string };
   };
 };
 

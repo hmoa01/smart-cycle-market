@@ -14,6 +14,16 @@ export type ProfileStackParamList = {
   "views/Listings": undefined;
   "views/SingleProduct": { product?: Product; productId?: string };
   "views/EditProduct": { product?: Product };
-  "views/ChatWindow": undefined;
+  "views/ChatWindow": {
+    conversationId: string;
+    peerProfile: {
+      id: string;
+      name: string;
+      avatar?: {
+        id: string;
+        url: string;
+      };
+    };
+  };
   "views/ProductList": { category: string };
 };
