@@ -5,6 +5,9 @@ import BackButton from "../ui/BackButton";
 import { useLocalSearchParams } from "expo-router";
 import AvatarView from "../ui/AvatarView";
 import PeerProfile from "../ui/PeerProfile";
+import { GiftedChat } from "react-native-gifted-chat";
+import useAuth from "../hooks/useAuth";
+import EmptyChatContainer from "../ui/EmptyChatContainer";
 
 interface Props {}
 
@@ -15,7 +18,11 @@ type peerProfileType = {
 };
 
 const ChatWindow: FC<Props> = (props) => {
+  const { authState } = useAuth();
   const { conversationId, peerProfile } = useLocalSearchParams();
+
+  const profile = authState.profile;
+  if (!profile) return null;
 
   const parsedPeerProfile: peerProfileType | null =
     typeof peerProfile === "string" ? JSON.parse(peerProfile) : null;
@@ -32,6 +39,17 @@ const ChatWindow: FC<Props> = (props) => {
           />
         }
       />
+      <GiftedChat
+        messages={[]}
+        user={{
+          _id: profile.id,
+          name: profile.name,
+          avatar: profile.avatar?.url,
+        }}
+        onSend={(message) => console.log(message)}
+        renderChatEmpty={() => <EmptyChatContainer />}
+        inverted={false}
+      />
     </View>
   );
 };
@@ -40,7 +58,9 @@ const styles = StyleSheet.create({
   header: {
     marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
-  container: {},
+  container: {
+    flex: 1,
+  },
 });
 
 export default ChatWindow;

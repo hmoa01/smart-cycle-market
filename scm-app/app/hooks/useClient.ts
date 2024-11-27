@@ -9,6 +9,13 @@ import { getAuthState, updateAuthState } from "app/store/auth";
 const authClient = axios.create({ baseURL });
 
 export type TokenResponse = {
+  profile: {
+    id: string;
+    email: string;
+    name: string;
+    verified: boolean;
+    avatar?: { id: string; url: string };
+  };
   tokens: {
     refresh: string;
     access: string;
@@ -59,7 +66,7 @@ const useClient = () => {
       await asyncStorage.save(Keys.REFRESH_TOKEN, res.tokens.refresh);
       dispatch(
         updateAuthState({
-          profile: { ...authState.profile!, accessToken: res.tokens.access },
+          profile: { ...res.profile!, accessToken: res.tokens.access },
           pending: false,
         })
       );
