@@ -99,6 +99,7 @@ export const signIn: RequestHandler = async (req, res) => {
       email: user.email,
       name: user.name,
       verified: user.verified,
+      avatar: user.avatar,
     },
     tokens: { refresh: refreshToken, access: accessToken },
   });
@@ -150,6 +151,13 @@ export const grantAccessToken: RequestHandler = async (req, res) => {
   await user.save();
 
   res.json({
+    profile: {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      verified: user.verified,
+      avatar: user.avatar,
+    },
     tokens: {
       access: newAccessToken,
       refresh: newRefreshToken,
