@@ -5,8 +5,26 @@ import { Dispatch, UnknownAction } from "@reduxjs/toolkit";
 import { runAxiosAsync } from "../api/runAxiosAsync";
 import asyncStorage, { Keys } from "../utils/asyncStorage";
 import { TokenResponse } from "../hooks/useClient";
+import { updateConversation } from "../store/conversation";
 
 const socket = io(baseURL, { path: "/socket-message", autoConnect: false });
+
+type MessageProfile = {
+  id: string;
+  name: string;
+  avatar?: string;
+};
+
+type newMessageResponse = {
+  message: {
+    id: string;
+    time: string;
+    text: string;
+    user: MessageProfile;
+  };
+  from: MessageProfile;
+  conversationId: string;
+};
 
 export const handleSocketConnection = (
   profile: Profile,
@@ -22,6 +40,19 @@ export const handleSocketConnection = (
   //   socket.on("disconnect", () => {
   //     console.log("disconnected:", socket.connected);
   //   });
+
+  socket.on("chat:message", (data: newMessageResponse) => {
+    const { conversationId, from, message } = data;
+
+    //this will update on going conversation or messages in between two users
+    dispatch(
+      updateConversation({
+        conversationId,
+        chat: { ...message, viewed: false },
+        peerProfile: from,
+      })
+    );
+  });
 
   socket.on("connect_error", async (error) => {
     const refreshToken = asyncStorage.get(Keys.REFRESH_TOKEN);
