@@ -1,6 +1,5 @@
 import { RequestHandler } from "express";
-import { isValidObjectId, ObjectId } from "mongoose";
-import path from "path";
+import { isValidObjectId, ObjectId, Types } from "mongoose";
 import ConversationModel from "src/models/conversation";
 import UserModel from "src/models/user";
 import { sendErrorRes } from "src/utils/helper";
@@ -115,4 +114,75 @@ export const getConversation: RequestHandler = async (req, res) => {
 
   // console.log(JSON.stringify(conversation, null, 2));
   res.json({ conversation: finalConversation });
+};
+
+export const getLastChats: RequestHandler = async (req, res) => {
+  let userId = new Types.ObjectId(req.user.id);
+
+  const chats = await ConversationModel.aggregate([
+    {
+      $match: {
+        participants: userId,
+      },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "participants",
+        foreignField: "_id",
+        as: "participantsInfo",
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        id: "$_id",
+        participants: {
+          $filter: {
+            input: "$participantsInfo",
+            as: "participant",
+            cond: { $ne: ["$$participant._id", userId] },
+          },
+        },
+        lastChat: {
+          $slice: ["$chats", -1],
+        },
+        unreadChatCounts: {
+          $size: {
+            $filter: {
+              input: "$chats",
+              as: "chat",
+              cond: {
+                $and: [
+                  { $eq: ["$$chat.viewed", false] },
+                  { $ne: ["$$chat.sentBy", userId] },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      $unwind: "$participants",
+    },
+    {
+      $unwind: "$lastChat",
+    },
+    {
+      $project: {
+        id: "$id",
+        lastMessage: "$lastChat.content",
+        timestamp: "$lastChat.timestamp",
+        unreadChatCounts: "$unreadChatCounts",
+        peerProfile: {
+          id: "$participants._id",
+          name: "$participants.name",
+          avatar: "$participants.avatar.url",
+        },
+      },
+    },
+  ]);
+
+  res.json({ chats });
 };

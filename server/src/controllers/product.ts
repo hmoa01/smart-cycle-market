@@ -223,6 +223,7 @@ export const deleteProductImage: RequestHandler = async (req, res) => {
 
 export const getProductDetail: RequestHandler = async (req, res) => {
   const { id } = req.params;
+  console.log("uslo", id);
   if (!isValidObjectId(id)) {
     return sendErrorRes(res, "Invalid product id", 422);
   }
@@ -328,6 +329,6 @@ export const getListings: RequestHandler = async (req, res) => {
       },
     };
   });
-
+  console.log(listings);
   res.json({ products: listings });
 };
