@@ -1,4 +1,4 @@
-import React, { FC, useEffect } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { View, StyleSheet, Platform, StatusBar } from "react-native";
 import AppHeader from "../components/AppHeader";
 import BackButton from "../ui/BackButton";
@@ -72,6 +72,7 @@ const ChatWindow: FC<Props> = (props) => {
   const { conversationId, peerProfile } = useLocalSearchParams();
   const dispatch = useDispatch();
   const { authClient } = useClient();
+  const [fetchingChats, setFetchingChats] = useState(false);
 
   const profile = authState.profile;
   if (!profile) return null;
@@ -125,10 +126,11 @@ const ChatWindow: FC<Props> = (props) => {
   };
 
   const fetchOldChats = async () => {
+    setFetchingChats(true);
     const res = await runAxiosAsync<{ conversation: Conversation }>(
       authClient("/conversation/chats/" + parsedConversationId)
     );
-
+    setFetchingChats(false);
     if (res?.conversation) {
       dispatch(addConversation([res.conversation]));
     }
