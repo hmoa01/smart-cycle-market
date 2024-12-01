@@ -11,6 +11,7 @@ import { TokenExpiredError, verify } from "jsonwebtoken";
 import morgan from "morgan";
 import conversationRouter from "./routes/conversation";
 import ConversationModel from "./models/conversation";
+import { updateSeenStatus } from "./controllers/conversation";
 
 const app = express();
 const server = http.createServer(app);
@@ -52,7 +53,7 @@ io.use((socket, next) => {
 type MessageProfile = {
   id: string;
   name: string;
-  avatar?: string;
+  avatar?: { id: string; url: string };
 };
 
 type IncomingMessage = {
@@ -72,9 +73,16 @@ type OutgoingMessageResponse = {
     time: string;
     text: string;
     user: MessageProfile;
+    viewed: boolean;
   };
   from: MessageProfile;
   conversationId: string;
+};
+
+type SeenData = {
+  messageId: string;
+  conversationId: string;
+  peerId: string;
 };
 
 io.on("connection", (socket) => {
@@ -100,11 +108,18 @@ io.on("connection", (socket) => {
     const messageResponse: OutgoingMessageResponse = {
       from: message.user,
       conversationId,
-      message: message,
+      message: { ...message, viewed: false },
     };
-    console.log(data);
     socket.to(to).emit("chat:message", messageResponse);
   });
+
+  socket.on(
+    "chat:seen",
+    async ({ messageId, conversationId, peerId }: SeenData) => {
+      await updateSeenStatus(peerId, conversationId);
+      socket.to(peerId).emit("chat:seen", { conversationId, messageId });
+    }
+  );
 });
 
 app.use(function (err, req, res, next) {

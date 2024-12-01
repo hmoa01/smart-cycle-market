@@ -7,7 +7,7 @@ import { sendErrorRes } from "src/utils/helper";
 interface UserProfile {
   id: string;
   name: string;
-  avatar?: string;
+  avatar?: { id: string; url: string };
 }
 
 interface Chat {
@@ -21,7 +21,11 @@ interface Chat {
 interface Conversation {
   id: string;
   chats: Chat[];
-  peerProfile: { avatar?: string; name: string; id: string };
+  peerProfile: {
+    avatar?: { id: string; url: string };
+    name: string;
+    id: string;
+  };
 }
 
 type PopulatedChat = {
@@ -85,7 +89,9 @@ export const getConversation: RequestHandler = async (req, res) => {
       match: { _id: { $ne: req.user.id } }, // Filter out the logged in user
       select: "name avatar.url",
     })
-    .select("sentBy chats._id chats.content chats.timestamp participants");
+    .select(
+      "sentBy chats._id chats.content chats.timestamp chats.viewed participants"
+    );
 
   if (!conversation) return sendErrorRes(res, "Details not found!", 404);
 
@@ -98,17 +104,16 @@ export const getConversation: RequestHandler = async (req, res) => {
       text: c.content,
       time: c.timestamp.toISOString(),
       viewed: c.viewed,
-
       user: {
         id: c.sentBy._id.toString(),
         name: c.sentBy.name,
-        avatar: c.sentBy.avatar?.url,
+        avatar: c.sentBy.avatar,
       },
     })),
     peerProfile: {
       id: peerProfile._id.toString(),
       name: peerProfile.name,
-      avatar: peerProfile.avatar?.url,
+      avatar: peerProfile.avatar,
     },
   };
 
@@ -178,11 +183,50 @@ export const getLastChats: RequestHandler = async (req, res) => {
         peerProfile: {
           id: "$participants._id",
           name: "$participants.name",
-          avatar: "$participants.avatar.url",
+          avatar: "$participants.avatar",
         },
       },
     },
   ]);
 
   res.json({ chats });
+};
+
+export const updateSeenStatus = async (
+  peerId: string,
+  conversationId: string
+) => {
+  await ConversationModel.findByIdAndUpdate(
+    conversationId,
+    {
+      $set: {
+        "chats.$[elem].viewed": true,
+      },
+    },
+    {
+      arrayFilters: [{ "elem.sentBy": peerId }],
+    }
+  );
+};
+
+export const updateChatSeenStatus: RequestHandler = async (req, res) => {
+  const { peerId, conversationId } = req.params;
+
+  if (!isValidObjectId(peerId) || !isValidObjectId(conversationId))
+    return sendErrorRes(res, "Invalid conversation or peer id!", 422);
+
+  await updateSeenStatus(peerId, conversationId);
+  // await ConversationModel.findByIdAndUpdate(
+  //   conversationId,
+  //   {
+  //     $set: {
+  //       "chats.$[elem].viewed": true,
+  //     },
+  //   },
+  //   {
+  //     arrayFilters: [{ "elem.sentBy": peerId }],
+  //   }
+  // );
+
+  res.json({ message: "Updated successfully." });
 };
