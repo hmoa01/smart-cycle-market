@@ -4,7 +4,7 @@ import { RootState } from ".";
 interface UserProfile {
   id: string;
   name: string;
-  avatar?: string;
+  avatar?: { id: string; url: string };
 }
 
 interface Chat {
@@ -18,7 +18,11 @@ interface Chat {
 export interface Conversation {
   id: string;
   chats: Chat[];
-  peerProfile: { avatar?: string; name: string; id: string };
+  peerProfile: {
+    avatar?: { id: string; url: string };
+    name: string;
+    id: string;
+  };
 }
 
 type UpdatePayload = {
@@ -45,6 +49,24 @@ const slice = createSlice({
     ) {
       state.conversations = payload;
     },
+    updateChatViewed(
+      state,
+      { payload }: PayloadAction<{ messageId: string; conversationId: string }>
+    ) {
+      const index = state.conversations.findIndex(
+        ({ id }) => id === payload.conversationId
+      );
+
+      if (index !== -1) {
+        state.conversations[index].chats.map((chat) => {
+          if (chat.id === payload.messageId) {
+            chat.viewed = true;
+          }
+
+          return chat;
+        });
+      }
+    },
     updateConversation(
       { conversations },
       { payload }: PayloadAction<UpdatePayload>
@@ -66,7 +88,8 @@ const slice = createSlice({
   },
 });
 
-export const { addConversation, updateConversation } = slice.actions;
+export const { addConversation, updateChatViewed, updateConversation } =
+  slice.actions;
 
 export const selectConversationById = (conversationId: string) => {
   return createSelector(

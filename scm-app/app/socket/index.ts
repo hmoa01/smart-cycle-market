@@ -5,24 +5,30 @@ import { Dispatch, UnknownAction } from "@reduxjs/toolkit";
 import { runAxiosAsync } from "../api/runAxiosAsync";
 import asyncStorage, { Keys } from "../utils/asyncStorage";
 import { TokenResponse } from "../hooks/useClient";
-import { updateConversation } from "../store/conversation";
+import { updateChatViewed, updateConversation } from "../store/conversation";
 
 const socket = io(baseURL, { path: "/socket-message", autoConnect: false });
 
 type MessageProfile = {
   id: string;
   name: string;
-  avatar?: string;
+  avatar?: { id: string; url: string };
 };
 
-type newMessageResponse = {
+export type newMessageResponse = {
   message: {
     id: string;
     time: string;
     text: string;
     user: MessageProfile;
+    viewed: boolean;
   };
   from: MessageProfile;
+  conversationId: string;
+};
+
+type SeenData = {
+  messageId: string;
   conversationId: string;
 };
 
@@ -48,10 +54,14 @@ export const handleSocketConnection = (
     dispatch(
       updateConversation({
         conversationId,
-        chat: { ...message, viewed: false },
+        chat: message,
         peerProfile: from,
       })
     );
+  });
+
+  socket.on("chat:seen", ({ conversationId, messageId }: SeenData) => {
+    dispatch(updateChatViewed({ conversationId, messageId }));
   });
 
   socket.on("connect_error", async (error) => {

@@ -1,28 +1,39 @@
 import React, { FC } from "react";
-import {
-  View,
-  StyleSheet,
-  Text,
-  Platform,
-  StatusBar,
-  FlatList,
-} from "react-native";
+import { View, StyleSheet, FlatList, Pressable } from "react-native";
 import AppHeader from "../components/AppHeader";
 import BackButton from "../ui/BackButton";
-import useClient from "../hooks/useClient";
 import EmptyView from "../ui/EmptyView";
-import { useSelector } from "react-redux";
-import { getActiveChats } from "../store/chats";
-import RecentChat from "../components/RecentChat";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  ActiveChat,
+  getActiveChats,
+  removeUnreadChatCount,
+} from "../store/chats";
+import RecentChat, { Separator } from "../components/RecentChat";
 import size from "../utils/size";
+import { useRouter } from "expo-router";
+import useClient from "../hooks/useClient";
+import { runAxiosAsync } from "../api/runAxiosAsync";
 
 interface Props {}
 
 const Chats: FC<Props> = (props) => {
   const { authClient } = useClient();
+  const router = useRouter();
   const chats = useSelector(getActiveChats);
+  const dispatch = useDispatch();
 
-  // const dispatch = useDispatch();
+  const onChatPress = async (chat: ActiveChat) => {
+    dispatch(removeUnreadChatCount(chat.id));
+
+    router.push({
+      pathname: "views/ChatWindow",
+      params: {
+        conversationId: JSON.stringify(chat.id),
+        peerProfile: JSON.stringify(chat.peerProfile),
+      },
+    });
+  };
 
   if (!chats.length)
     return (
@@ -39,11 +50,17 @@ const Chats: FC<Props> = (props) => {
         <FlatList
           data={chats}
           renderItem={({ item }) => (
-            <RecentChat
-              name={item.peerProfile.name}
-              avatar={item.peerProfile.avatar}
-            />
+            <Pressable onPress={() => onChatPress(item)}>
+              <RecentChat
+                name={item.peerProfile.name}
+                avatar={item.peerProfile.avatar?.url}
+                timestamp={item.timestamp}
+                lastMessage={item.lastMessage}
+                unreadMessageCount={item.unreadChatCounts}
+              />
+            </Pressable>
           )}
+          ItemSeparatorComponent={() => <Separator />}
         />
       </View>
     </>

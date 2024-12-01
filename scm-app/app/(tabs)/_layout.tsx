@@ -8,8 +8,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          headerTitleAlign: "center",
-          title: "Home",
+          headerShown: false,
           tabBarLabelStyle: {
             display: "none",
           },
@@ -25,6 +24,7 @@ export default function TabLayout() {
         name="newListing"
         options={{
           headerTitleAlign: "center",
+          // headerShown: false,
           title: "New Listings",
           tabBarLabelStyle: {
             display: "none",

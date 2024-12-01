@@ -44,11 +44,7 @@ function RootLayoutContent() {
         statusBarHeight={StatusBar.currentHeight}
       />
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="views/Home"
-          options={{ headerTitle: "Home", headerTitleAlign: "center" }}
-        />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
 
         <Stack.Screen
           name="(auth)/SignIn"
@@ -110,6 +106,7 @@ function RootLayoutContent() {
         />
 
         <Stack.Screen name="+not-found" />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );

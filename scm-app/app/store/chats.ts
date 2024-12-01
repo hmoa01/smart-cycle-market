@@ -9,7 +9,7 @@ export interface ActiveChat {
   peerProfile: {
     id: string;
     name: string;
-    avatar?: string;
+    avatar?: { id: string; url: string };
   };
 }
 
@@ -22,14 +22,30 @@ const slice = createSlice({
     addNewActiveChat: (state, { payload }: PayloadAction<ActiveChat[]>) => {
       return payload;
     },
+    removeUnreadChatCount: (chats, { payload }: PayloadAction<string>) => {
+      const index = chats.findIndex((chat) => chat.id === payload);
+
+      if (index !== -1) {
+        chats[index].unreadChatCounts = 0;
+      }
+    },
   },
 });
 
-export const { addNewActiveChat } = slice.actions;
+export const { addNewActiveChat, removeUnreadChatCount } = slice.actions;
 
 export const getActiveChats = createSelector(
   (state: RootState) => state,
   ({ chats }) => chats
+);
+
+export const getUnreadChatsCount = createSelector(
+  (state: RootState) => state,
+  ({ chats }) => {
+    return chats.reduce((previousValue, currentValue) => {
+      return previousValue + currentValue.unreadChatCounts;
+    }, 0);
+  }
 );
 
 export default slice.reducer;

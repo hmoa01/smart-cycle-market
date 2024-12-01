@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useCallback, useEffect, useState } from "react";
 import { View, StyleSheet, Platform, StatusBar } from "react-native";
 import AppHeader from "../components/AppHeader";
 import BackButton from "../ui/BackButton";
@@ -7,7 +7,7 @@ import PeerProfile from "../ui/PeerProfile";
 import { GiftedChat, IMessage } from "react-native-gifted-chat";
 import useAuth from "../hooks/useAuth";
 import EmptyChatContainer from "../ui/EmptyChatContainer";
-import socket from "../socket";
+import socket, { newMessageResponse } from "../socket";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addConversation,
@@ -17,6 +17,8 @@ import {
 } from "../store/conversation";
 import { runAxiosAsync } from "../api/runAxiosAsync";
 import useClient from "../hooks/useClient";
+import EmptyView from "../ui/EmptyView";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface Props {}
 
@@ -34,7 +36,7 @@ type OutGoingMessage = {
     user: {
       id: string;
       name: string;
-      avatar?: string;
+      avatar?: { id: string; url: string };
     };
   };
   to: string;
@@ -56,7 +58,7 @@ const formatConversationToIMessage = (value?: Conversation): IMessage[] => {
       user: {
         _id: chat.user.id,
         name: chat.user.name,
-        avatar: chat.user.avatar,
+        avatar: chat.user.avatar?.url,
       },
     };
   });
@@ -79,13 +81,14 @@ const ChatWindow: FC<Props> = (props) => {
 
   const parsedPeerProfile: peerProfileType | null =
     typeof peerProfile === "string" ? JSON.parse(peerProfile) : null;
-
   const parsedConversationId: string | null =
     typeof conversationId === "string" ? JSON.parse(conversationId) : null;
 
   if (!parsedConversationId) return null;
 
-  const chats = useSelector(selectConversationById(parsedConversationId));
+  const conversation = useSelector(
+    selectConversationById(parsedConversationId)
+  );
 
   const handleOnMessageSend = (messages: IMessage[]) => {
     if (!profile) return;
@@ -101,7 +104,7 @@ const ChatWindow: FC<Props> = (props) => {
         user: {
           id: profile.id,
           name: profile.name,
-          avatar: profile.avatar?.url,
+          avatar: profile.avatar,
         },
       },
       conversationId: parsedConversationId,
@@ -116,7 +119,7 @@ const ChatWindow: FC<Props> = (props) => {
         chat: { ...newMessage.message, viewed: false },
         peerProfile: {
           ...parsedPeerProfile,
-          avatar: parsedPeerProfile.avatar.url,
+          avatar: parsedPeerProfile.avatar,
         },
       })
     );
@@ -136,9 +139,40 @@ const ChatWindow: FC<Props> = (props) => {
     }
   };
 
+  const sendSeenRequest = () => {
+    runAxiosAsync(
+      authClient.patch(
+        `/conversation/seen/${parsedConversationId}/${parsedPeerProfile?.id}`
+      )
+    );
+  };
+
   useEffect(() => {
-    fetchOldChats();
+    const handleApiRequest = async () => {
+      await fetchOldChats();
+      await sendSeenRequest();
+    };
+
+    handleApiRequest();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      const updateSeenStatus = (data: newMessageResponse) => {
+        socket.emit("chat:seen", {
+          messageId: data.message.id,
+          conversationId: parsedConversationId,
+          peerId: parsedPeerProfile?.id,
+        });
+      };
+
+      socket.on("chat:message", updateSeenStatus);
+
+      return () => socket.off("chat:message", updateSeenStatus);
+    }, [])
+  );
+
+  if (fetchingChats) return <EmptyView title="Please wait..." />;
 
   return (
     <View style={styles.container}>
@@ -153,7 +187,7 @@ const ChatWindow: FC<Props> = (props) => {
         }
       />
       <GiftedChat
-        messages={formatConversationToIMessage(chats)}
+        messages={formatConversationToIMessage(conversation)}
         user={{
           _id: profile.id,
           name: profile.name,

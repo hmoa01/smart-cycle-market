@@ -1,17 +1,24 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { FC } from "react";
-import { View, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  StyleProp,
+  ViewStyle,
+} from "react-native";
 import colors from "../utils/colors";
 import size from "../utils/size";
 
 interface Props {
   indicate?: boolean;
   onPress?(): void;
+  style?: StyleProp<ViewStyle>;
 }
 
-const ChatNotification: FC<Props> = ({ indicate, onPress }) => {
+const ChatNotification: FC<Props> = ({ indicate, onPress, style }) => {
   return (
-    <Pressable onPress={onPress} style={styles.container}>
+    <Pressable onPress={onPress} style={[styles.container, style]}>
       <MaterialCommunityIcons
         name="message"
         size={24}

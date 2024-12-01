@@ -11,7 +11,7 @@ interface Props {
 const PeerProfile: FC<Props> = ({ avatar, name }) => {
   return (
     <View style={styles.container}>
-      <AvatarView uri={avatar.url} />
+      <AvatarView uri={avatar.url!} />
       <Text style={styles.name}>{name}</Text>
     </View>
   );
