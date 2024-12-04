@@ -12,13 +12,10 @@ import {
 import RecentChat, { Separator } from "../components/RecentChat";
 import size from "../utils/size";
 import { useRouter } from "expo-router";
-import useClient from "../hooks/useClient";
-import { runAxiosAsync } from "../api/runAxiosAsync";
 
 interface Props {}
 
 const Chats: FC<Props> = (props) => {
-  const { authClient } = useClient();
   const router = useRouter();
   const chats = useSelector(getActiveChats);
   const dispatch = useDispatch();

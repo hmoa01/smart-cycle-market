@@ -20,11 +20,14 @@ import {
   getUnreadChatsCount,
 } from "../store/chats";
 import { useNavigation } from "expo-router";
+import SearchModal from "../components/SearchModal";
 
 interface Props {}
 
 const Home: FC<Props> = (props) => {
   const [products, setProducts] = useState<LatestProduct[]>([]);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+
   const { navigate } = useNavigation<NavigationProp<ProfileStackParamList>>();
 
   const { authClient } = useClient();
@@ -75,7 +78,7 @@ const Home: FC<Props> = (props) => {
         indicate={totalUnreadMessages > 0}
       />
       <ScrollView style={styles.container}>
-        <SearchBar />
+        <SearchBar asButton onPress={() => setShowSearchModal(true)} />
         <CategoryList
           onPress={(category) => navigate("views/ProductList", { category })}
         />
@@ -86,6 +89,10 @@ const Home: FC<Props> = (props) => {
           data={products}
         />
       </ScrollView>
+      <SearchModal
+        visible={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+      />
     </View>
   );
 };

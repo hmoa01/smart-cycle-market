@@ -1,16 +1,29 @@
 import { AntDesign } from "@expo/vector-icons";
 import React, { FC } from "react";
-import { View, StyleSheet, TextInput } from "react-native";
+import { View, StyleSheet, TextInput, Text, Pressable } from "react-native";
 import colors from "../utils/colors";
 
-interface Props {}
+interface Props {
+  asButton?: boolean;
+  onPress?(): void;
+}
 
-const SearchBar: FC<Props> = (props) => {
+const SearchBar: FC<Props> = ({ asButton, onPress }) => {
   return (
-    <View style={styles.container}>
+    <Pressable onPress={onPress} style={styles.container}>
       <AntDesign name="search1" size={20} color={colors.primary} />
-      <TextInput placeholder="Search here..." style={styles.textInput} />
-    </View>
+      {asButton ? (
+        <View style={styles.textInput}>
+          <Text style={styles.fakePlaceholder}>Search here...</Text>
+        </View>
+      ) : (
+        <TextInput
+          placeholder="Search here..."
+          style={[styles.textInput, styles.textInputFont]}
+          autoFocus
+        />
+      )}
+    </Pressable>
   );
 };
 
@@ -26,8 +39,16 @@ const styles = StyleSheet.create({
   textInput: {
     paddingLeft: 10,
     flex: 1,
+  },
+  textInputFont: {
     color: colors.primary,
     fontSize: 18,
+  },
+  fakePlaceholder: {
+    color: colors.primary,
+    fontSize: 18,
+    opacity: 0.5,
+    fontWeight: "200",
   },
 });
 
