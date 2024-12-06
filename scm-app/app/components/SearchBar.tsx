@@ -6,9 +6,11 @@ import colors from "../utils/colors";
 interface Props {
   asButton?: boolean;
   onPress?(): void;
+  onChange?(text: string): void;
+  value?: string;
 }
 
-const SearchBar: FC<Props> = ({ asButton, onPress }) => {
+const SearchBar: FC<Props> = ({ asButton, onPress, onChange, value }) => {
   return (
     <Pressable onPress={onPress} style={styles.container}>
       <AntDesign name="search1" size={20} color={colors.primary} />
@@ -21,6 +23,9 @@ const SearchBar: FC<Props> = ({ asButton, onPress }) => {
           placeholder="Search here..."
           style={[styles.textInput, styles.textInputFont]}
           autoFocus
+          onChangeText={onChange}
+          value={value}
+          onSubmitEditing={() => console.log("sadasd")}
         />
       )}
     </Pressable>

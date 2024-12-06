@@ -2,9 +2,9 @@ import { RequestHandler } from "express";
 import { UploadResponse } from "imagekit/dist/libs/interfaces";
 import imagekit from "src/cloud";
 import fs from "fs";
-import ProductModel from "src/models/product";
+import ProductModel, { ProductDocument } from "src/models/product";
 import { sendErrorRes } from "src/utils/helper";
-import { isValidObjectId } from "mongoose";
+import { FilterQuery, isValidObjectId } from "mongoose";
 import { UserDocument } from "src/models/user";
 import categories from "src/utils/categories";
 
@@ -331,4 +331,22 @@ export const getListings: RequestHandler = async (req, res) => {
   });
   console.log(listings);
   res.json({ products: listings });
+};
+
+export const searchProducts: RequestHandler = async (req, res) => {
+  const { name } = req.query;
+
+  const filter: FilterQuery<ProductDocument> = {};
+
+  if (typeof name === "string") filter.name = { $regex: new RegExp(name, "i") };
+
+  const products = await ProductModel.find(filter).limit(50);
+
+  res.json({
+    results: products.map((product) => ({
+      id: product._id,
+      name: product.name,
+      thumbnail: product.thumbnail,
+    })),
+  });
 };

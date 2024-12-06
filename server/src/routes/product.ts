@@ -8,6 +8,7 @@ import {
   getProductByCategory,
   getLatestProducts,
   getListings,
+  searchProducts,
 } from "src/controllers/product";
 import { isAuth } from "src/middleware/auth";
 import fileParser from "src/middleware/fileParser";
@@ -38,5 +39,6 @@ productRouter.get("/detail/:id", isAuth, getProductDetail);
 productRouter.get("/by-category/:category", isAuth, getProductByCategory);
 productRouter.get("/latest", getLatestProducts);
 productRouter.get("/listings", isAuth, getListings);
+productRouter.get("/search", isAuth, searchProducts);
 
 export default productRouter;

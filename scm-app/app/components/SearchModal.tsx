@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { FC } from "react";
+import React, { FC, useEffect, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -10,10 +10,15 @@ import {
   StatusBar,
   FlatList,
   Text,
+  Keyboard,
 } from "react-native";
 import SearchBar from "./SearchBar";
 import colors from "../utils/colors";
 import size from "../utils/size";
+import EmptyView from "../ui/EmptyView";
+import LottieView from "lottie-react-native";
+import useClient from "../hooks/useClient";
+import { runAxiosAsync } from "../api/runAxiosAsync";
 
 interface Props {
   visible: boolean;
@@ -44,13 +49,47 @@ const searchResults = [
 ];
 
 const SearchModal: FC<Props> = ({ visible, onClose }) => {
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [query, setQuery] = useState("");
+  const { authClient } = useClient();
+
   const handleClose = () => {
     onClose(!visible);
   };
+
+  const handleChange = async (value: string) => {
+    setQuery(value);
+    const res = await runAxiosAsync(
+      authClient.get("/product/search?name=" + value)
+    );
+    console.log(res);
+  };
+
+  useEffect(() => {
+    const keyShowEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const keyHideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const keyShowListener = Keyboard.addListener(keyShowEvent, (evt) => {
+      setKeyboardHeight(evt.startCoordinates?.height!);
+    });
+
+    const keyHideListener = Keyboard.addListener(keyHideEvent, (evt) => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      keyShowListener.remove();
+      keyHideListener.remove();
+    };
+  }, []);
+
   return (
     <Modal animationType="fade" onRequestClose={handleClose} visible={visible}>
       <SafeAreaView style={styles.container}>
         <View style={styles.innerContainer}>
+          {/* SEARCH BAR */}
           <View style={styles.header}>
             <Pressable onPress={handleClose}>
               <Ionicons
@@ -60,20 +99,36 @@ const SearchModal: FC<Props> = ({ visible, onClose }) => {
               />
             </Pressable>
             <View style={styles.searchBar}>
-              <SearchBar />
+              <SearchBar onChange={handleChange} value={query} />
             </View>
           </View>
+          {/* BUSY INDICATOR */}
+          {busy ? (
+            <View style={styles.busyIconContainer}>
+              <View style={styles.busyAnimationSize}>
+                <LottieView
+                  style={styles.flex1}
+                  autoPlay
+                  loop
+                  source={require("../../assets/images/loading_2.json")}
+                />
+              </View>
+            </View>
+          ) : null}
           {/* SUGGESTIONS */}
-          <FlatList
-            data={searchResults}
-            renderItem={({ item }) => (
-              <Pressable>
-                <Text style={styles.suggestionListItem}>{item.name}</Text>
-              </Pressable>
-            )}
-            keyExtractor={(item) => item.id.toString()}
-            contentContainerStyle={styles.suggestionList}
-          />
+          <View style={{ paddingBottom: keyboardHeight }}>
+            <FlatList
+              data={searchResults}
+              renderItem={({ item }) => (
+                <Pressable>
+                  <Text style={styles.suggestionListItem}>{item.name}</Text>
+                </Pressable>
+              )}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={styles.suggestionList}
+              ListEmptyComponent={<EmptyView title="No results found..." />}
+            />
+          </View>
         </View>
       </SafeAreaView>
     </Modal>
@@ -87,6 +142,7 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     padding: size.padding,
+    flex: 1,
   },
   header: {
     flexDirection: "row",
@@ -97,13 +153,26 @@ const styles = StyleSheet.create({
     marginLeft: size.padding,
   },
   suggestionList: {
-    paddingHorizontal: size.padding,
+    padding: size.padding,
   },
   suggestionListItem: {
     color: colors.primary,
     fontWeight: "600",
     paddingVertical: 7,
     fontSize: 18,
+  },
+  busyIconContainer: {
+    flex: 0.3,
+    alignItems: "center",
+    justifyContent: "center",
+    opacity: 0.5,
+  },
+  busyAnimationSize: {
+    height: 100,
+    width: 100,
+  },
+  flex1: {
+    flex: 1,
   },
 });
 
