@@ -28,3 +28,19 @@ export const selectImages = async (
 
   return result;
 };
+
+let timeoutId: NodeJS.Timeout;
+export const debounce = <T extends any[], R>(
+  func: (...args: T) => Promise<R>,
+  timeout: number
+) => {
+  return (...args: T): Promise<R> => {
+    return new Promise<R>((resolve) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(async () => {
+        const res = await func(...args);
+        resolve(res);
+      }, timeout);
+    });
+  };
+};

@@ -11,6 +11,7 @@ import {
   FlatList,
   Text,
   Keyboard,
+  Image,
 } from "react-native";
 import SearchBar from "./SearchBar";
 import colors from "../utils/colors";
@@ -19,6 +20,10 @@ import EmptyView from "../ui/EmptyView";
 import LottieView from "lottie-react-native";
 import useClient from "../hooks/useClient";
 import { runAxiosAsync } from "../api/runAxiosAsync";
+import { debounce } from "../utils/helper";
+import { useNavigation } from "expo-router";
+import { NavigationProp } from "@react-navigation/native";
+import { ProfileStackParamList } from "../types/StackProps";
 
 interface Props {
   visible: boolean;
@@ -48,22 +53,50 @@ const searchResults = [
   { id: 20, name: "Google Nest Thermostat" },
 ];
 
+type SearchResult = {
+  id: string;
+  name: string;
+  thumbnail?: string;
+};
+
 const SearchModal: FC<Props> = ({ visible, onClose }) => {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [notFound, setNotFound] = useState(false);
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const { navigate } = useNavigation<NavigationProp<ProfileStackParamList>>();
   const { authClient } = useClient();
 
   const handleClose = () => {
     onClose(!visible);
   };
 
+  const handleOnResultPress = (result: SearchResult) => {
+    navigate("views/SingleProduct", { productId: result.id });
+    handleClose();
+  };
+
+  const searchProduct = async (query: string) => {
+    if (query.trim().length >= 3) {
+      return await runAxiosAsync<{ results: SearchResult[] }>(
+        authClient.get("/product/search?name=" + query)
+      );
+    }
+  };
+
+  const searchDebounce = debounce(searchProduct, 300);
+
   const handleChange = async (value: string) => {
+    setNotFound(false);
     setQuery(value);
-    const res = await runAxiosAsync(
-      authClient.get("/product/search?name=" + value)
-    );
-    console.log(res);
+    setBusy(true);
+    const res = await searchDebounce(value);
+    setBusy(false);
+    if (res) {
+      if (res.results.length) setResults(res.results);
+      else setNotFound(true);
+    }
   };
 
   useEffect(() => {
@@ -118,15 +151,24 @@ const SearchModal: FC<Props> = ({ visible, onClose }) => {
           {/* SUGGESTIONS */}
           <View style={{ paddingBottom: keyboardHeight }}>
             <FlatList
-              data={searchResults}
+              data={!busy ? results : []}
               renderItem={({ item }) => (
-                <Pressable>
+                <Pressable
+                  onPress={() => handleOnResultPress(item)}
+                  style={styles.searchResultItem}
+                >
+                  <Image
+                    source={{ uri: item.thumbnail || undefined }}
+                    style={styles.thumbnail}
+                  />
                   <Text style={styles.suggestionListItem}>{item.name}</Text>
                 </Pressable>
               )}
               keyExtractor={(item) => item.id.toString()}
               contentContainerStyle={styles.suggestionList}
-              ListEmptyComponent={<EmptyView title="No results found..." />}
+              ListEmptyComponent={
+                notFound ? <EmptyView title="No results found..." /> : null
+              }
             />
           </View>
         </View>
@@ -139,6 +181,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
+  },
+  searchResultItem: {
+    flexDirection: "row",
+    marginBottom: 7,
+  },
+  thumbnail: {
+    width: 60,
+    height: 40,
+    marginRight: 10,
   },
   innerContainer: {
     padding: size.padding,

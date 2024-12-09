@@ -120,6 +120,10 @@ io.on("connection", (socket) => {
       socket.to(peerId).emit("chat:seen", { conversationId, messageId });
     }
   );
+
+  socket.on("chat:typing", (typingData: { to: string; active: boolean }) => {
+    socket.to(typingData.to).emit("chat:typing", { typing: typingData.active });
+  });
 });
 
 app.use(function (err, req, res, next) {

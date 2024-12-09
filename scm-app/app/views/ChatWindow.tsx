@@ -69,12 +69,16 @@ const formatConversationToIMessage = (value?: Conversation): IMessage[] => {
   return formattedValues || [];
 };
 
+let timeoutId: NodeJS.Timeout | null;
+const TYPING_TIMEOUT = 2000;
+
 const ChatWindow: FC<Props> = (props) => {
   const { authState } = useAuth();
   const { conversationId, peerProfile } = useLocalSearchParams();
   const dispatch = useDispatch();
   const { authClient } = useClient();
   const [fetchingChats, setFetchingChats] = useState(false);
+  const [typing, setTyping] = useState(false);
 
   const profile = authState.profile;
   if (!profile) return null;
@@ -128,6 +132,26 @@ const ChatWindow: FC<Props> = (props) => {
     socket.emit("chat:new", newMessage);
   };
 
+  const emitTypingEnd = (timeout: number) => {
+    return setTimeout(() => {
+      socket.emit("chat:typing", {
+        active: false,
+        to: parsedPeerProfile?.id,
+      });
+      timeoutId = null;
+    }, timeout);
+  };
+
+  const handleOnInputChange = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = emitTypingEnd(TYPING_TIMEOUT);
+    } else {
+      socket.emit("chat:typing", { active: true, to: parsedPeerProfile?.id });
+      timeoutId = emitTypingEnd(TYPING_TIMEOUT);
+    }
+  };
+
   const fetchOldChats = async () => {
     setFetchingChats(true);
     const res = await runAxiosAsync<{ conversation: Conversation }>(
@@ -156,6 +180,10 @@ const ChatWindow: FC<Props> = (props) => {
     handleApiRequest();
   }, []);
 
+  const updateTypingStatus = (data: { typing: boolean }) => {
+    setTyping(data.typing);
+  };
+
   useFocusEffect(
     useCallback(() => {
       const updateSeenStatus = (data: newMessageResponse) => {
@@ -167,8 +195,12 @@ const ChatWindow: FC<Props> = (props) => {
       };
 
       socket.on("chat:message", updateSeenStatus);
+      socket.on("chat:typing", updateTypingStatus);
 
-      return () => socket.off("chat:message", updateSeenStatus);
+      return () => {
+        socket.off("chat:message", updateSeenStatus);
+        socket.off("chat:typing", updateTypingStatus);
+      };
     }, [])
   );
 
@@ -196,6 +228,8 @@ const ChatWindow: FC<Props> = (props) => {
         onSend={handleOnMessageSend}
         renderChatEmpty={() => <EmptyChatContainer />}
         inverted={false}
+        onInputTextChanged={handleOnInputChange}
+        isTyping={typing}
       />
     </View>
   );
